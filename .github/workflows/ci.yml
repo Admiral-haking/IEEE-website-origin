@@ -26,5 +26,8 @@ jobs:
         run: npm run lint
 
       - name: Build
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/ci
+          JWT_SECRET: test-ci-secret-please-ignore
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
         run: npm run build
-
