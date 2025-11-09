@@ -3,7 +3,7 @@
 import React from 'react';
 import useAxios from 'axios-hooks';
 import { usePathname } from 'next/navigation';
-import { Box, Card, CardActionArea, CardContent, Chip, Container, Grid2 as Grid, Stack, TextField, Typography, Button, Paper } from '@mui/material';
+import { Box, Card, CardActionArea, CardContent, Chip, Container, Stack, TextField, Typography, Button, Paper } from '@mui/material';
 import NextLink from 'next/link';
 import { useTranslation } from 'react-i18next';
 
@@ -58,28 +58,28 @@ export default function ProjectsListPage() {
           </Stack>
         </Paper>
       )}
-      <Grid container spacing={2}>
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+        gap: 2
+      }}>
         {items.map((p) => (
-          <Grid key={p.id} size={{ xs: 12, sm: 6, md: 4 }}>
-            <Card variant="outlined" sx={{ borderRadius: 3 }}>
-              <CardActionArea component={NextLink} href={`/${locale}/projects/${p.id}`}>
-                <CardContent>
-                  <Typography variant="h6" fontWeight={700}>{p.title}</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{p.description}</Typography>
-                  <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap" sx={{ mt: 1.5 }}>
-                    {(p.tags || []).map((t: string) => (<Chip key={t} size="small" label={t} />))}
-                  </Stack>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          </Grid>
+          <Card key={p.id} variant="outlined" sx={{ borderRadius: 3 }}>
+            <CardActionArea component={NextLink} href={`/${locale}/projects/${p.id}`}>
+              <CardContent>
+                <Typography variant="h6" fontWeight={700}>{p.title}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{p.description}</Typography>
+                <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap" sx={{ mt: 1.5 }}>
+                  {(p.tags || []).map((t: string) => (<Chip key={t} size="small" label={t} />))}
+                </Stack>
+              </CardContent>
+            </CardActionArea>
+          </Card>
         ))}
-        {!loading && items.length === 0 && (
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="body2" color="text.secondary">{t('no_projects') as any || 'No projects found'}</Typography>
-          </Grid>
-        )}
-      </Grid>
+      </Box>
+      {!loading && items.length === 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>{t('no_projects') as any || 'No projects found'}</Typography>
+      )}
     </Container>
   );
 }

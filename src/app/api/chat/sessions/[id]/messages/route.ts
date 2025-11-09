@@ -34,13 +34,13 @@ async function takeDaily(userId: string, role: keyof typeof ROLE_LIMITS) {
   return { ok: node.count <= limit, remaining: Math.max(0, limit - node.count) };
 }
 
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (process.env.CHAT_DISABLED === '1' || process.env.CHAT_DISABLED === 'true') {
     return NextResponse.json({ error: 'Chat temporarily disabled' }, { status: 503 });
   }
   try {
     const token = await getTokenFromCookies();
-    const { id } = params;
+    const { id } = await params;
     const s = await ChatSession.findById(id).lean();
     if (!s || s.userId !== token.sub) throw new AppError('Not Found', 404);
     const items = await ChatMessage.find({ sessionId: id }).sort({ createdAt: 1 }).lean();
@@ -51,13 +51,13 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (process.env.CHAT_DISABLED === '1' || process.env.CHAT_DISABLED === 'true') {
     return NextResponse.json({ error: 'Chat temporarily disabled' }, { status: 503 });
   }
   try {
     const token = await getTokenFromCookies();
-    const { id } = params;
+    const { id } = await params;
     const s = await ChatSession.findById(id).lean();
     if (!s || s.userId !== token.sub) throw new AppError('Not Found', 404);
     const { content } = await req.json();

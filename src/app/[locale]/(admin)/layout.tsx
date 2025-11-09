@@ -4,7 +4,7 @@ import { requireAdminAreaAccess } from '@/server/auth/guard';
 import { getTokenFromCookies } from '@/server/auth/jwt';
 import { redirect } from 'next/navigation';
 
-export default async function AdminGroupLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: 'en'|'fa' }> }) {
+export default async function AdminGroupLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   try {
     await requireAdminAreaAccess();

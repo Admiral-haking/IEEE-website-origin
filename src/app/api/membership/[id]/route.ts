@@ -3,10 +3,10 @@ import { requireRoleOrPermission } from '@/server/auth/guard';
 import { AppError } from '@/server/errors';
 import { reviewApplication } from '@/server/membership/service';
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireRoleOrPermission({ minRole: 'executive', permission: 'operations.membership' });
-    const { id } = params;
+  const { id } = await params;
     const body = await req.json();
     const status = String(body?.status || '');
     if (!['reviewed','approved','rejected'].includes(status)) throw new AppError('Invalid status', 422);

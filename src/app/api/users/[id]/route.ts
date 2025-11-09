@@ -5,7 +5,7 @@ import { AppError, UnauthorizedError } from '@/server/errors';
 import { UpdateUserSchema, ProfileRequiredSchema } from '@/server/users/validators';
 import User from '@/models/User';
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = await requireAuth();
     const jsonRaw = await req.json();
@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     Object.keys(json).forEach((k) => { if (json[k] === '' || json[k] === null) delete json[k]; });
     if (typeof json.username === 'string' && json.username.trim() === '') delete json.username;
     if (typeof json.email === 'string' && json.email.trim() === '') delete json.email;
-    const { id } = params;
+    const { id } = await params;
     const isSelf = String(token.sub) === id;
     const input: any = isSelf && token.role !== 'admin' ? ProfileRequiredSchema.parse(json) : UpdateUserSchema.parse(json);
     if (String(token.sub) !== id) {
@@ -35,10 +35,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAdmin();
-    const { id } = params;
+    const { id } = await params;
     await deleteUser(id);
     return NextResponse.json({ ok: true });
   } catch (err: any) {
@@ -50,10 +50,10 @@ export async function DELETE(_: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
     if (String(token.sub) !== id) {
       await requireAdmin();
     }

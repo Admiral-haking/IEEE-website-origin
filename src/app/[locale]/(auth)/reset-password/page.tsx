@@ -2,10 +2,11 @@ import React from 'react';
 import type { Metadata } from 'next';
 import ResetPasswordForm from '@/views/auth/password/ResetPasswordForm';
 
-export default async function ResetPasswordPage({ params, searchParams }: { params: Promise<{ locale: 'en'|'fa' }>; searchParams?: { token?: string } }) {
+export default async function ResetPasswordPage({ params, searchParams }: { params: Promise<{ locale: 'en'|'fa' }>; searchParams: Promise<{ token?: string }> }) {
   const { locale } = await params;
   const dict = await getDict(locale);
-  const token = searchParams?.token;
+  const sp = await searchParams;
+  const token = sp?.token;
   return (
     <div style={{ padding: '24px 16px' }}>
       {token ? (

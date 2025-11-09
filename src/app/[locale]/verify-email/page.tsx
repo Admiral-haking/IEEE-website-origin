@@ -14,7 +14,7 @@ export default async function VerifyEmailPage({ params, searchParams }: { params
   }
   try {
     const result = await verifyEmailToken(token);
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     cookieStore.set(AuthCookie.name, result.token, AuthCookie.options);
     const status = result.alreadyVerified ? 'already' : 'success';
     const destination = `/${locale}/profile?verify=${status}`;

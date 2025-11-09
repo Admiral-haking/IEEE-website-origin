@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTokenFromCookies } from '@/server/auth/jwt';
 import ChannelRead from '@/models/ChannelRead';
 
-export async function PATCH(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = await getTokenFromCookies();
-    const channelId = params.id;
+    const { id: channelId } = await params;
     await ChannelRead.updateOne(
       { channelId, userId: token.sub },
       { $set: { lastReadAt: new Date() } },
@@ -17,4 +17,3 @@ export async function PATCH(_req: NextRequest, { params }: { params: { id: strin
     return NextResponse.json({ ok: true });
   }
 }
-

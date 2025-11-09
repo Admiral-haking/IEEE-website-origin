@@ -5,7 +5,7 @@ import useAxios from 'axios-hooks';
 import { useParams } from 'next/navigation';
 import { Chip, Container, Paper, Stack, Typography, Button, TextField } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import useAxios from 'axios-hooks';
+// removed duplicate import of useAxios
 
 export default function ProjectDetailPage() {
   const params = useParams();

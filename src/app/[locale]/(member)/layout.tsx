@@ -4,7 +4,7 @@ import { requireAuth } from '@/server/auth/guard';
 import { getTokenFromCookies } from '@/server/auth/jwt';
 import { redirect } from 'next/navigation';
 
-export default async function MemberGroupLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: 'en'|'fa' }> }) {
+export default async function MemberGroupLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   try {
     await requireAuth();
@@ -13,4 +13,3 @@ export default async function MemberGroupLayout({ children, params }: { children
   }
   return <MemberLayout>{children}</MemberLayout>;
 }
-

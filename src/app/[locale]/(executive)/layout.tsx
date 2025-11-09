@@ -4,7 +4,7 @@ import { requireExecutiveAreaAccess } from '@/server/auth/guard';
 import { redirect } from 'next/navigation';
 import { getTokenFromCookies } from '@/server/auth/jwt';
 
-export default async function ExecutiveGroupLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: 'en'|'fa' }> }) {
+export default async function ExecutiveGroupLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   try {
     await requireExecutiveAreaAccess();

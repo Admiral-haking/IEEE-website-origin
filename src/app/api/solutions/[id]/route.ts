@@ -4,10 +4,10 @@ import { AppError } from '@/server/errors';
 import { updateSolution, deleteSolution } from '@/server/solutions/service';
 import { UpdateSolutionSchema } from '@/server/solutions/validators';
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try { await requireRoleOrPermission({ minRole: 'executive', permission: 'content.solutions' }); } catch { return NextResponse.json({ error: 'Forbidden' }, { status: 403 }); }
   try {
-    const { id } = params;
+    const { id } = await params;
     const json = await req.json();
     const input = UpdateSolutionSchema.parse(json);
     const updated = await updateSolution(id, input);
@@ -19,10 +19,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try { await requireRoleOrPermission({ minRole: 'executive', permission: 'content.solutions' }); } catch { return NextResponse.json({ error: 'Forbidden' }, { status: 403 }); }
   try {
-    const { id } = params;
+    const { id } = await params;
     const res = await deleteSolution(id);
     return NextResponse.json(res);
   } catch (err: any) {
