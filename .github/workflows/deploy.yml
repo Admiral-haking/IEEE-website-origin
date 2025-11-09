@@ -1,6 +1,8 @@
 name: Deploy
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -9,6 +11,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ci-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,6 +42,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    environment: production
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -60,11 +69,13 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            set -e
+            set -euo pipefail
             cd ${{ secrets.DEPLOY_PATH }}
             unzip -o deployment-package.zip
             npm ci --omit=dev
             PM2_APP_NAME="${{ secrets.PM2_APP_NAME }}"
             if [ -z "$PM2_APP_NAME" ]; then PM2_APP_NAME="IEEE-website"; fi
             pm2 restart "$PM2_APP_NAME" || pm2 start npm --name "$PM2_APP_NAME" -- start
-
+            # Health check (adjust URL if behind reverse proxy)
+            sleep 3
+            curl -fsS http://127.0.0.1:3000/api/health || curl -fsS http://127.0.0.1:3000 || (pm2 logs "$PM2_APP_NAME" --lines 50 && exit 1)

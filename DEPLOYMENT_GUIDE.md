@@ -94,7 +94,7 @@ PM2 manages the Node.js process with auto-restart and logging.
 Two workflows are provided:
 
 - CI (`.github/workflows/ci.yml`): install, lint, build on pushes/PRs
-- Deploy (`.github/workflows/deploy.yml`): builds and deploys via SSH (manual trigger)
+- Deploy (`.github/workflows/deploy.yml`): auto-deploys on push to `main` (with approval if environment requires it)
 
 ### Required Secrets (Repository Settings → Secrets and variables → Actions)
 - `SSH_HOST` — e.g., `91.107.178.13`
@@ -102,6 +102,19 @@ Two workflows are provided:
 - `SSH_KEY` — private key (PEM) with access to the server
 - `DEPLOY_PATH` — e.g., `/opt/ieee-website`
 - Optional: `PM2_APP_NAME` (default: `IEEE-website`)
+
+### Environment protection & approval
+- In GitHub → Settings → Environments → `production`:
+  - Create environment `production`.
+  - Require reviewers (e.g., you) to approve before deployment.
+  - Optional: add wait timer or branch restrictions.
+
+With this setup, only one command is needed to release:
+
+1) Locally: `git push origin main`
+2) GitHub Actions runs CI and build automatically.
+3) You approve the `production` environment when checks pass (click Approve).
+4) Workflow deploys to the server and runs a health check.
 
 ## 📊 Monitoring
 
