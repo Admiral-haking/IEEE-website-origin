@@ -32,6 +32,7 @@ error() {
 # Step 1: Check if there are changes to commit
 log "📊 Checking for changes..."
 cd "$PROJECT_DIR"
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
 
 if git diff-index --quiet HEAD --; then
     warn "No changes detected. Skipping git operations."
@@ -43,7 +44,7 @@ else
     
     # Step 3: Push to remote repository
     log "📤 Pushing to remote repository..."
-    git push origin main
+    git push origin "$CURRENT_BRANCH"
     log "✅ Changes pushed to Git"
 fi
 
@@ -80,4 +81,3 @@ log "   2. Run the deployment script on the server"
 log "   3. Verify the website is running"
 log ""
 log "🌐 Your website will be available at: http://91.107.178.13"
-

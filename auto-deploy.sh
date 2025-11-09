@@ -30,6 +30,7 @@ info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
 # Step 1: Check Git status
 info "Step 1: Checking Git status..."
 cd "$PROJECT_DIR"
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
 
 if git diff-index --quiet HEAD --; then
     warning "No changes to commit."
@@ -43,7 +44,7 @@ fi
 # Step 2: Push to remote (if configured)
 info "Step 2: Pushing to remote repository..."
 if git remote -v | grep -q origin; then
-    git push origin main
+    git push origin "$CURRENT_BRANCH"
     success "Pushed to remote repository"
 else
     warning "No remote repository configured"
@@ -85,4 +86,3 @@ echo "   curl http://${SERVER_IP}:3000"
 echo ""
 info "🌐 Your website will be available at: http://${SERVER_IP}"
 echo ""
-
