@@ -76,6 +76,13 @@ jobs:
             set -euo pipefail
             mkdir -p ${{ secrets.DEPLOY_PATH }}
             cd ${{ secrets.DEPLOY_PATH }}
+            # Ensure unzip and PM2 are available
+            if ! command -v unzip >/dev/null 2>&1; then
+              apt-get update -y && apt-get install -y unzip
+            fi
+            if ! command -v pm2 >/dev/null 2>&1; then
+              npm install -g pm2
+            fi
             unzip -o deployment-package.zip
             npm ci --omit=dev
             PM2_APP_NAME="${{ secrets.PM2_APP_NAME }}"
