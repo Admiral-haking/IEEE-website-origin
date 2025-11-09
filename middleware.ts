@@ -35,6 +35,8 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = `/${pref}${pathname}`;
     const res = NextResponse.redirect(url);
+    // Set i18n cookie used by client; keep legacy alias for compatibility
+    res.cookies.set('i18next', pref, { path: '/' });
     res.cookies.set('hippo_locale', pref, { path: '/' });
     return res;
   }
@@ -44,4 +46,3 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/((?!_next|.*\..*).*)']
 };
-

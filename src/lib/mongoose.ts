@@ -5,7 +5,8 @@ mongoose.set('strictQuery', true);
 mongoose.set('sanitizeFilter', true as any);
 mongoose.set('runValidators', true);
 
-const MONGODB_URI = process.env.MONGODB_URI || (process.env.NODE_ENV === 'production' ? '' : 'mongodb://127.0.0.1:27017/ieee-qut-website');
+// In development, fall back to the sample URI from .env.example to reduce confusion
+const MONGODB_URI = process.env.MONGODB_URI || (process.env.NODE_ENV === 'production' ? '' : 'mongodb://127.0.0.1:27017/ieee');
 
 if (!MONGODB_URI) {
   if (process.env.NODE_ENV === 'production') {

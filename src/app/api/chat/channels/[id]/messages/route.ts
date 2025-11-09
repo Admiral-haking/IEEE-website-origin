@@ -24,18 +24,18 @@ async function takeDaily(userId: string, role: string) {
   return { ok: true, remaining: limit };
 }
 
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
   const c = await Channel.findById(id).lean();
   if (!c) return NextResponse.json({ error: 'Not Found' }, { status: 404 });
   const items = await ChannelMessage.find({ channelId: id }).sort({ createdAt: 1 }).limit(200).lean();
   return NextResponse.json({ items: items.map((m: any) => ({ id: String(m._id), userId: String(m.userId), content: m.content, createdAt: m.createdAt })) });
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const token = await getTokenFromCookies();
-    const { id } = await params;
+    const { id } = params;
     const c = await Channel.findById(id).lean();
     if (!c) throw new AppError('Not Found', 404);
     const { content } = await req.json();

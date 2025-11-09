@@ -5,10 +5,10 @@
 
 echo "🚀 Starting IEEE Website Auto-Deployment..."
 
-# Configuration
-PROJECT_DIR="/home/alikheiri/IEEE-origin"
-SERVER_ID="68f6e1f14b2a040259fae208"
-REPO_ID="6910b76502538ef1abffa15e"
+# Configuration (env-driven)
+PROJECT_DIR="${PROJECT_DIR:-$PWD}"
+SERVER_ID="${SERVER_ID:-}"
+REPO_ID="${REPO_ID:-}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -57,15 +57,17 @@ else
     exit 1
 fi
 
-# Step 5: Deploy to server
+# Step 5: Deploy to server (hand-off to remote-deploy helper if SSH_HOST is set)
 log "🚀 Deploying to server..."
-# This would trigger the deployment script on the server
-# For now, we'll simulate the deployment
-log "📡 Connecting to server: root@91.107.178.13"
+if [ -n "${SSH_HOST:-}" ]; then
+  log "Using scripts/remote-deploy.sh with SSH_HOST=${SSH_HOST}"
+  SSH_USER="${SSH_USER:-root}" DEPLOY_PATH="${DEPLOY_PATH:-/opt/ieee-website}" PM2_APP_NAME="${PM2_APP_NAME:-IEEE-website}" bash scripts/remote-deploy.sh
+  exit $?
+fi
 
 # Step 6: Create deployment package
 log "📦 Creating deployment package (without secrets)..."
-zip -r deployment-package.zip .next package.json package-lock.json next.config.mjs public config -x "*.git*" "node_modules/*"
+zip -r deployment-package.zip .next package.json package-lock.json next.config.mjs ecosystem.config.js -x "*.git*" "node_modules/*"
 log "✅ Deployment package created"
 
 echo ""
@@ -80,4 +82,4 @@ log "   1. Upload deployment-package.zip to the server"
 log "   2. Run the deployment script on the server"
 log "   3. Verify the website is running"
 log ""
-log "🌐 Your website will be available at: http://91.107.178.13"
+if [ -n "${SSH_HOST:-}" ]; then log "🌐 Your website will be available at: http://${SSH_HOST}"; fi

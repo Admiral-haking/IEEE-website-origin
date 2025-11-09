@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { usePathname, useRouter } from 'next/navigation';
+import showReloadSpinner from '@/lib/reload-spinner';
 
 type Lang = 'en' | 'fa';
 
@@ -36,8 +37,10 @@ export default function LanguageToggle() {
   const handleClose = () => setAnchorEl(null);
   const choose = (code: Lang) => {
     setLang(code);
-    i18n.changeLanguage(code);
-    // Rebuild path with selected locale
+    try { i18n.changeLanguage(code); } catch {}
+    // Persist cookie for SSR to avoid flicker and ensure correct dir/lang
+    try { document.cookie = `i18next=${code};path=/`; document.cookie = `hippo_locale=${code};path=/`; } catch {}
+    // Rebuild path with selected locale and force a full reload
     let path = pathname || '/';
     const parts = path.split('/').filter(Boolean);
     if (parts.length === 0) {
@@ -48,8 +51,15 @@ export default function LanguageToggle() {
     } else {
       path = `/${code}/${parts.join('/')}`;
     }
-    router.push(path as any);
     handleClose();
+    // More specific localized message
+    showReloadSpinner(code === 'fa' ? 'در حال تغییر زبان…' : 'Switching language…');
+    if (typeof window !== 'undefined') {
+      window.location.assign(path);
+    } else {
+      router.push(path as any);
+      router.refresh();
+    }
   };
 
   return (

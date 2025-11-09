@@ -3,10 +3,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { getRedis } from '@/lib/redis';
 import { getTransporter } from '@/server/mail/mailer';
+import { requireRoleAtLeast } from '@/server/auth/guard';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_req: NextRequest) {
+  // Restrict detailed health to admins
+  try {
+    await requireRoleAtLeast('admin');
+  } catch {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   // Ensure mongoose connection attempt has been made
   try { await mongooseConn; } catch {}
   // DB state

@@ -10,9 +10,9 @@ echo ""
 
 # Configuration
 PROJECT_NAME="IEEE Website"
-PROJECT_DIR="/home/alikheiri/IEEE-origin"
-SERVER_IP="91.107.178.13"
-SERVER_USER="root"
+PROJECT_DIR="${PROJECT_DIR:-$PWD}"
+SERVER_IP="${SSH_HOST:-}"
+SERVER_USER="${SSH_USER:-root}"
 
 # Colors
 GREEN='\033[0;32m'
@@ -62,7 +62,7 @@ fi
 # Step 4: Create deployment package
 info "Step 4: Creating deployment package (without secrets)..."
 rm -f deployment-package.zip
-zip -r deployment-package.zip .next package.json package-lock.json next.config.mjs public config -x "*.git*" "node_modules/*"
+zip -r deployment-package.zip .next package.json package-lock.json next.config.mjs ecosystem.config.js -x "*.git*" "node_modules/*"
 success "Deployment package created: deployment-package.zip"
 
 # Step 5: Display deployment instructions
@@ -72,17 +72,17 @@ echo ""
 info "📋 Next Steps for Deployment:"
 echo ""
 echo "1. 📤 Upload package to server:"
-echo "   scp deployment-package.zip ${SERVER_USER}@${SERVER_IP}:/opt/ieee-website/"
+echo "   DEPLOY_PATH=/opt/ieee-website scp deployment-package.zip ${SERVER_USER}@${SERVER_IP}:/opt/ieee-website/"
 echo ""
 echo "2. 🚀 Run deployment on server:"
 echo "   ssh ${SERVER_USER}@${SERVER_IP} '"
 echo "     cd /opt/ieee-website && \\"
 echo "     unzip -o deployment-package.zip && \\"
-echo "     npm install --production && \\"
+echo "     npm ci --omit=dev && \\"
 echo "     pm2 restart IEEE-website || pm2 start npm --name \"IEEE-website\" -- start'"
 echo ""
 echo "3. ✅ Verify deployment:"
 echo "   curl http://${SERVER_IP}:3000"
 echo ""
-info "🌐 Your website will be available at: http://${SERVER_IP}"
+if [ -n "$SERVER_IP" ]; then info "🌐 Your website will be available at: http://${SERVER_IP}"; fi
 echo ""

@@ -11,3 +11,41 @@ body {
 .stepperFrame {
   border: 1px solid #222;
 }
+
+/* RTL fixes for MUI form labels/inputs (all breakpoints) */
+html[dir='rtl'] .MuiFormLabel-root {
+  text-align: right;
+  transform-origin: top right;
+}
+html[dir='rtl'] label.MuiInputLabel-outlined {
+  right: 14px;
+  left: auto;
+}
+html[dir='rtl'] .MuiInputBase-input,
+html[dir='rtl'] .MuiOutlinedInput-input,
+html[dir='rtl'] .MuiSelect-select {
+  text-align: right;
+}
+html[dir='rtl'] .MuiFormHelperText-root {
+  text-align: right;
+}
+html[dir='rtl'] .MuiFormControlLabel-root {
+  margin-right: 8px;
+  margin-left: 0;
+}
+html[dir='rtl'] .MuiInputAdornment-root.MuiInputAdornment-positionStart {
+  margin-right: 0;
+  margin-left: 8px;
+}
+html[dir='rtl'] .MuiInputAdornment-root.MuiInputAdornment-positionEnd {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+/* Desktop-specific adjustments */
+@media (min-width: 900px) {
+  html[dir='rtl'] .MuiFormLabel-root {
+    right: 0;
+    left: auto;
+  }
+}

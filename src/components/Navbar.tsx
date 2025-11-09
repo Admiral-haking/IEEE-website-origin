@@ -116,7 +116,7 @@ export default function Navbar() {
       <Container maxWidth="lg">
         <Toolbar disableGutters sx={{ justifyContent: 'space-between', gap: { xs: 1, md: 2 }, minHeight: { xs: 52, sm: 64 } }}>
           <Stack direction="row" spacing={{ xs: .5, md: 1 }} alignItems="center" sx={{ minWidth: 0 }}>
-            <Link component={NextLink} href={`/${locale}`} underline="none" color="inherit" sx={{ display: 'inline-flex', alignItems: 'center', gap: { xs: .5, md: 1 }, minWidth: 0, color: 'common.white' }}>
+            <Link component={NextLink} href={`/${locale}`} underline="none" color="inherit" sx={{ display: 'inline-flex', alignItems: 'center', gap: { xs: .5, md: 1 }, minWidth: 0, color: (t) => (t.palette.mode === 'dark' ? 'common.white' : 'text.primary') }}>
               <Image src={logoSrc} alt={(t('logo_alt') as any) || 'IEEE logo'} height={20} />
               <Typography
                 variant="h6"
@@ -137,7 +137,7 @@ export default function Navbar() {
               const active = current.startsWith('/' + l.key);
               const hot = l.key === 'solutions' || l.key === 'blog' || l.key === 'case-studies';
               return (
-                  <Button key={l.key} component={NextLink} href={l.href} variant={active ? 'contained' : 'text'} size="small" sx={{ color: 'common.white' }}>
+                  <Button key={l.key} component={NextLink} href={l.href} variant={active ? 'contained' : 'text'} size="small" sx={{ color: (t) => (t.palette.mode === 'dark' ? 'common.white' : 'text.primary') }}>
                     {l.key === 'notifications' ? (
                       <span suppressHydrationWarning>
                         {l.label}{' '}
@@ -258,7 +258,7 @@ export default function Navbar() {
                 </Button>
               </form>
             ) : (
-              <Button component={NextLink} href={`/${locale}/signin`} size="small" variant="outlined" sx={{ display: { xs: 'none', sm: 'inline-flex' }, height: 36, lineHeight: 1.2, px: 1.75, color: 'common.white', borderColor: 'common.white', whiteSpace: 'nowrap' }}>
+              <Button component={NextLink} href={`/${locale}/signin`} size="small" variant="outlined" sx={{ display: { xs: 'none', sm: 'inline-flex' }, height: 36, lineHeight: 1.2, px: 1.75, color: (t) => (t.palette.mode === 'dark' ? 'common.white' : 'text.primary'), borderColor: (t) => (t.palette.mode === 'dark' ? 'common.white' : t.palette.divider), whiteSpace: 'nowrap' }}>
                 <span suppressHydrationWarning>{t('sign_in')}</span>
               </Button>
             )}

@@ -36,7 +36,7 @@ jobs:
 
       - name: Pack artifact
         run: |
-          zip -r deployment-package.zip .next package.json package-lock.json next.config.mjs public config -x "*.git*" "node_modules/*"
+          zip -r deployment-package.zip .next package.json package-lock.json next.config.mjs ecosystem.config.js -x "*.git*" "node_modules/*"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

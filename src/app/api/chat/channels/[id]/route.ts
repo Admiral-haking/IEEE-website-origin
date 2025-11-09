@@ -4,10 +4,10 @@ import { requireRoleOrPermission } from '@/server/auth/guard';
 import { AppError } from '@/server/errors';
 import Channel from '@/models/Channel';
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try { await requireRoleOrPermission({ minRole: 'executive', permission: 'operations.chatModeration' }); } catch { return NextResponse.json({ error: 'Forbidden' }, { status: 403 }); }
   try {
-    const { id } = await params;
+    const { id } = params;
     const json = await req.json();
     const patch: any = {};
     if (json.name !== undefined) patch.name = String(json.name);
@@ -33,10 +33,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
   try { await requireRoleOrPermission({ minRole: 'executive', permission: 'operations.chatModeration' }); } catch { return NextResponse.json({ error: 'Forbidden' }, { status: 403 }); }
   try {
-    const { id } = await params;
+    const { id } = params;
     const res = await Channel.findByIdAndDelete(id).lean();
     if (!res) throw new AppError('Not Found', 404);
     return NextResponse.json({ ok: true });
