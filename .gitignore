@@ -33,3 +33,4 @@ coverage/
 .turbo/
 .pnpm-store/
 .cache/
+.venv/
