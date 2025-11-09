@@ -39,7 +39,7 @@ npm run build
 
 ### 2. Create Deployment Package (without secrets)
 ```bash
-zip -r deployment-package.zip .next package.json next.config.mjs public config \
+zip -r deployment-package.zip .next package.json package-lock.json next.config.mjs public config \
   -x "*.git*" "node_modules/*"
 ```
 

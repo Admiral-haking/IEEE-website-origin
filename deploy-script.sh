@@ -65,7 +65,7 @@ log "📡 Connecting to server: root@91.107.178.13"
 
 # Step 6: Create deployment package
 log "📦 Creating deployment package (without secrets)..."
-zip -r deployment-package.zip .next package.json next.config.mjs public config -x "*.git*" "node_modules/*"
+zip -r deployment-package.zip .next package.json package-lock.json next.config.mjs public config -x "*.git*" "node_modules/*"
 log "✅ Deployment package created"
 
 echo ""
