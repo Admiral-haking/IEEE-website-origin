@@ -1,0 +1,29 @@
+import React from 'react';
+import '@/lib/mongoose';
+import StaticPage from '@/models/StaticPage';
+import { Container, Typography, Box } from '@mui/material';
+import type { Metadata } from 'next';
+import { buildListMetadata } from '@/lib/metadata';
+
+async function getDict(locale: 'en'|'fa') {
+  return locale === 'fa' ? (await import('@/locales/fa/common.json')).default : (await import('@/locales/en/common.json')).default;
+}
+
+export default async function AboutPage({ params }: { params: Promise<{ locale: 'en'|'fa' }> }) {
+  const { locale } = await params;
+  const dict = await getDict(locale);
+  const page = await StaticPage.findOne({ key: 'about', locale }).lean();
+  return (
+    <Container sx={{ py: 6 }}>
+      <Typography component="h1" variant="h4" fontWeight={800} gutterBottom suppressHydrationWarning>{(dict as any).about || 'About'}</Typography>
+      <Box mt={2} sx={{ '& img': { maxWidth: '100%', height: 'auto' } }} dangerouslySetInnerHTML={{ __html: page?.contentHtml || '' }} />
+    </Container>
+  );
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: 'en'|'fa' }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const dict = await getDict(locale as any);
+  return buildListMetadata({ locale, path: '/about', title: (dict as any).about || 'About', description: (dict as any).nav_pages_sub });
+}
+
