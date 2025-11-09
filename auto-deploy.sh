@@ -60,9 +60,9 @@ else
 fi
 
 # Step 4: Create deployment package
-info "Step 4: Creating deployment package..."
+info "Step 4: Creating deployment package (without secrets)..."
 rm -f deployment-package.zip
-zip -r deployment-package.zip .next package.json next.config.mjs .env.local public config -x "*.git*" "node_modules/*"
+zip -r deployment-package.zip .next package.json next.config.mjs public config -x "*.git*" "node_modules/*"
 success "Deployment package created: deployment-package.zip"
 
 # Step 5: Display deployment instructions

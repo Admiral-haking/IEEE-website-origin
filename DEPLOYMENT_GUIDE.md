@@ -37,9 +37,10 @@ cd /home/alikheiri/IEEE-origin
 npm run build
 ```
 
-### 2. Create Deployment Package
+### 2. Create Deployment Package (without secrets)
 ```bash
-zip -r deployment-package.zip .next package.json next.config.mjs .env.local public config
+zip -r deployment-package.zip .next package.json next.config.mjs public config \
+  -x "*.git*" "node_modules/*"
 ```
 
 ### 3. Upload to Server
@@ -49,17 +50,21 @@ scp deployment-package.zip root@91.107.178.13:/opt/ieee-website/
 
 ### 4. Deploy on Server
 ```bash
-ssh root@91.107.178.13
+ssh root@91.107.178.13 <<'SSH'
+set -e
 cd /opt/ieee-website
 unzip -o deployment-package.zip
-npm install --production
+npm ci --omit=dev
 pm2 restart IEEE-website || pm2 start npm --name "IEEE-website" -- start
+SSH
 ```
 
 ## ⚙️ Configuration Files
 
-### Environment Variables (.env.local)
-Make sure your environment variables are properly configured for production.
+### Environment Variables
+- Do NOT include `.env.local` in deployment packages.
+- Create and manage env vars on the server at `/opt/ieee-website/.env.local`.
+  - See `.env.example` for required keys.
 
 ### Nginx Configuration
 The server includes Nginx configuration for reverse proxy.
@@ -80,9 +85,23 @@ PM2 manages the Node.js process with auto-restart and logging.
 - Asset optimization
 
 ### Deployment
-- Zero-downtime deployment
+- Zero-downtime with PM2
 - Health checks
-- Rollback capability
+- Rollback: keep previous `deployment-package.zip` and PM2 logs for restore
+
+## 🤖 GitHub Actions (CI/CD)
+
+Two workflows are provided:
+
+- CI (`.github/workflows/ci.yml`): install, lint, build on pushes/PRs
+- Deploy (`.github/workflows/deploy.yml`): builds and deploys via SSH (manual trigger)
+
+### Required Secrets (Repository Settings → Secrets and variables → Actions)
+- `SSH_HOST` — e.g., `91.107.178.13`
+- `SSH_USER` — e.g., `root`
+- `SSH_KEY` — private key (PEM) with access to the server
+- `DEPLOY_PATH` — e.g., `/opt/ieee-website`
+- Optional: `PM2_APP_NAME` (default: `IEEE-website`)
 
 ## 📊 Monitoring
 
@@ -131,5 +150,4 @@ For deployment issues, check:
 4. Environment configuration
 
 ---
-**Last Updated**: $(date +'%Y-%m-%d')
-EOF 
+**Last Updated**: 2025-11-09

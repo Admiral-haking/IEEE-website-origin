@@ -1,11 +1,16 @@
 # IEEE Quchan Student Branch Website
 
+![CI](https://github.com/Admiral-haking/IEEE-website-origin/actions/workflows/ci.yml/badge.svg)
+![Deploy](https://github.com/Admiral-haking/IEEE-website-origin/actions/workflows/deploy.yml/badge.svg)
+
 Next.js app (App Router + TypeScript) for the IEEE Student Branch at Quchan University of Technology — built with MUI v7, react-hook-form + zod, axios/axios-hooks, and Mongoose.
 
 ## Requirements
 
 - Node.js 18+ (recommended 18.18+ or 20+)
 - npm
+
+See `.nvmrc` for the recommended Node.js version.
 
 ## Install
 
@@ -32,6 +37,13 @@ If you see Next.js dev errors like ENOENT for `.next/routes-manifest.json` or `C
 3. If port 3000 is in use, either kill the process (`lsof -i:3000 -n -P` then `kill -9 <PID>`) or let Next use another port.
 
 We do not ignore `.next` in webpack watch (see `next.config.mjs`) and `npm run dev` cleans `.next/` before starting to avoid chunk/manifest mismatch.
+
+## Build & Run
+
+```bash
+npm run build
+npm start
+```
 
 ## Light/Dark Mode
 
@@ -90,3 +102,21 @@ If SMTP is not configured, messages are still saved to MongoDB and the API respo
 - Uploads
   - Media upload limited to 10MB and content types `image/*` or `application/pdf`.
   - Served media is cached with long-lived immutable headers.
+
+## Deployment
+
+- Local packaging (no secrets): see `DEPLOYMENT_GUIDE.md` or run `./auto-deploy.sh`.
+- PM2 config: `ecosystem.config.js` (runs `npm start`).
+- GitHub Actions:
+  - CI: `.github/workflows/ci.yml`
+  - Deploy: `.github/workflows/deploy.yml` (requires repo secrets — see guide)
+
+## Contributing & Community
+
+- See `CONTRIBUTING.md` for development flow.
+- `CODE_OF_CONDUCT.md` applies to all interactions.
+- Security reports: `SECURITY.md`.
+
+## License
+
+MIT — see `LICENSE`.
