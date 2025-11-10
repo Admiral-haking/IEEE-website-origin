@@ -54,7 +54,7 @@ export default function ForgotPasswordForm({ locale }: { locale: 'en'|'fa' }) {
           {...register('email')}
           error={!!errors.email}
           helperText={errors.email?.message}
-          InputLabelProps={isRtl ? { sx: { left: 'auto', right: 14, transformOrigin: 'right top', textAlign: 'right' } } : undefined}
+          InputLabelProps={isRtl ? { sx: { left: 14, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : undefined}
         />
         <Button type="submit" variant="contained" color="secondary" disabled={isSubmitting || loading}>
           {t('password_reset_cta') as string}

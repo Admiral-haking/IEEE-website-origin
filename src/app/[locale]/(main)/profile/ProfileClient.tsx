@@ -79,24 +79,14 @@ export default function ProfileClient() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      // Convert file to base64 and upload via JSON to /api/media/profile
-      const toBase64 = (f: File) => new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const res = reader.result as string;
-          const base64 = res.split(',')[1] || '';
-          resolve(base64);
-        };
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(f);
-      });
-      const base64 = await toBase64(file);
-      const out = await axios.post('/api/media/profile', { name: file.name, contentType: file.type, data: base64 });
-      const fileId: string | undefined = (out as any)?.data?.file?._id;
-      if (fileId) {
-        const url = `/api/media/${fileId}`;
+      // Upload directly to /api/users/me/photo (form-data) so it updates the user and cleans old photo
+      const fd = new FormData();
+      fd.append('file', file);
+      const out = await axios.post('/api/users/me/photo', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const url: string | undefined = (out as any)?.data?.url;
+      if (url) {
         setForm((f: any) => ({ ...f, profile_picture: url }));
-        setUser((u) => (u ? { ...u, profile_picture: url } : u));
+        setUser((u) => (u ? { ...u, profile_picture: url } as any : u));
       }
     } catch (err: any) {
       setSaveErr(err?.response?.data?.error || 'Upload failed');
@@ -129,6 +119,8 @@ export default function ProfileClient() {
           certificates: (res.data.user as any).certificates || [],
           social_links: (res.data.user as any).social_links || [],
           student_id: (res.data.user as any).student_id || '',
+          profile_picture: (res.data.user as any).profile_picture || '',
+          sub_disciplines: (res.data.user as any).sub_disciplines || [],
         });
       })
       .catch(() => {
@@ -195,6 +187,7 @@ export default function ProfileClient() {
       ['major', (v) => !!v],
       ['degree', (v) => !!v],
       ['bio', (v) => (v || '').length >= 10],
+      ['sub_disciplines', (v) => Array.isArray(v) && v.length > 0],
       ['profile_picture', (v) => !!v],
       ['social_links', (v) => Array.isArray(v) && v.length > 0],
       ['projects', (v) => Array.isArray(v) && v.length > 0],
@@ -274,11 +267,13 @@ export default function ProfileClient() {
           <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }}>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar sx={{ width: 56, height: 56 }}>{String(user.name || user.email || 'U').slice(0,1).toUpperCase()}</Avatar>
+            <Avatar src={(user as any)?.profile_picture || (form as any)?.profile_picture || undefined} sx={{ width: 56, height: 56 }}>
+              {String(user.name || user.email || 'U').slice(0,1).toUpperCase()}
+            </Avatar>
             <Stack spacing={0.5}>
               <Typography variant="subtitle1" fontWeight={700}>{user.name || user.email}</Typography>
               <Typography variant="body2" color="text.secondary">{user.username || '—'}</Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                 {(() => {
                   const raw = user.role as any;
                   const role = raw === 'professor' ? 'executive' : raw === 'user' ? 'member' : raw;
@@ -290,10 +285,19 @@ export default function ProfileClient() {
                   return <Chip size="small" color={color as any} label={label as any} />;
                 })()}
                 {!!user.membership_status && <Chip size="small" variant="outlined" label={(t(user.membership_status) as any) || user.membership_status} />}
+                {!!(form as any)?.major && <Chip size="small" variant="outlined" color="default" label={(t(String((form as any).major)) as any) || String((form as any).major)} />}
+                {!!(form as any)?.degree && <Chip size="small" variant="outlined" color="default" label={(t(`degree_${String((form as any).degree)}`) as any) || String((form as any).degree)} />}
+                {Array.isArray((form as any)?.sub_disciplines) && (form as any).sub_disciplines.map((s: string, i: number) => (
+                  <Chip key={i} size="small" variant="outlined" color="primary" label={(t(s) as any) || s} />
+                ))}
               </Stack>
             </Stack>
           </Stack>
           <div className="flex gap-2">
+            <Button component="label" variant="outlined">
+              {t('upload_photo') as any || 'Upload photo'}
+              <input type="file" accept="image/png,image/jpeg" hidden onChange={onPickProfile} />
+            </Button>
             {!editing && <Button variant="contained" onClick={() => setEditing(true)}>{t('edit_profile') as any || 'Edit Profile'}</Button>}
             
             <Button variant="outlined" color="error" onClick={logout}>{t('logout') as any || 'Logout'}</Button>
@@ -359,6 +363,29 @@ export default function ProfileClient() {
                 <MenuItem value="bachelor">{t('degree_bachelor') as any || 'Bachelor'}</MenuItem>
                 <MenuItem value="master">{t('degree_master') as any || 'Master'}</MenuItem>
                 <MenuItem value="phd">{t('degree_phd') as any || 'PhD'}</MenuItem>
+              </TextField>
+              <TextField
+                name="sub_disciplines"
+                select
+                SelectProps={{ multiple: true }}
+                label={t('sub_disciplines') as any || 'Sub-disciplines'}
+                value={form.sub_disciplines || []}
+                onChange={(e) => setForm((f:any)=> ({ ...f, sub_disciplines: Array.isArray(e.target.value) ? e.target.value : [e.target.value] }))}
+                helperText={fieldErrors.sub_disciplines}
+              >
+                <MenuItem value="telecommunications">{t('telecommunications') as any || 'Telecommunications'}</MenuItem>
+                <MenuItem value="power">{t('power') as any || 'Power'}</MenuItem>
+                <MenuItem value="electronics">{t('electronics') as any || 'Electronics'}</MenuItem>
+                <MenuItem value="control">{t('control') as any || 'Control'}</MenuItem>
+                <MenuItem value="embedded">{t('embedded') as any || 'Embedded'}</MenuItem>
+                <MenuItem value="robotics">{t('robotics') as any || 'Robotics'}</MenuItem>
+                <MenuItem value="ai">{t('ai') as any || 'AI'}</MenuItem>
+                <MenuItem value="networks">{t('networks') as any || 'Networks'}</MenuItem>
+                <MenuItem value="web">{t('web') as any || 'Web'}</MenuItem>
+                <MenuItem value="security">{t('security') as any || 'Security'}</MenuItem>
+                <MenuItem value="data">{t('data') as any || 'Data'}</MenuItem>
+                <MenuItem value="software">{t('software') as any || 'Software'}</MenuItem>
+                <MenuItem value="other">{t('other') as any || 'Other'}</MenuItem>
               </TextField>
               <TextField name="ieee_membership_id" label={t('ieee_membership_id') as any} value={form.ieee_membership_id || ''} disabled helperText={t('readonly_field') as any || 'Read-only'} />
               {/* membership_status is managed by admins only; hidden from self-edit */}

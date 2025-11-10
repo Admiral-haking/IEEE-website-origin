@@ -31,7 +31,7 @@ export default function JobDialog({ open, onClose, initial, onSubmit }: { open: 
   const imageSrc = imageId ? `/api/media/${imageId}` : '';
   const theme = useTheme();
   const isRtl = theme.direction === 'rtl';
-  const labelProps = isRtl ? { sx: { left: 'auto', right: 14, transformOrigin: 'right top', textAlign: 'right' } } : undefined;
+  const labelProps = isRtl ? { sx: { left: 14, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : undefined;
 
   const titleId = React.useId();
   return (
@@ -54,8 +54,7 @@ export default function JobDialog({ open, onClose, initial, onSubmit }: { open: 
             <Button variant="outlined" size="small" onClick={() => setPickerOpen(true)}>{t('select_image')}</Button>
             {imageSrc && (
               <Box sx={{ mt: 1 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageSrc} alt="cover" style={{ maxWidth: '100%', borderRadius: 8 }} />
+                <Box component="img" src={imageSrc} alt="cover" sx={{ maxWidth: '100%', borderRadius: 1 }} />
               </Box>
             )}
           </Box>

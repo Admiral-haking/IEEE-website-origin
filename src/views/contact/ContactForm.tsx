@@ -32,7 +32,8 @@ declare global { interface Window { turnstile?: any } }
 export default function ContactForm({ locale, emailFallback, phoneFallback }: { locale: 'en'|'fa'; emailFallback?: string; phoneFallback?: string }) {
   const { t } = useTranslation();
   const isFa = locale === 'fa';
-  const labelProps = isFa ? { sx: { left: 'auto', right: 14, transformOrigin: 'right top', textAlign: 'right' } } : undefined;
+  // In Farsi (RTL), float labels should anchor top-left per design
+  const labelProps = isFa ? { sx: { left: 14, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : undefined;
   const [{ data, error, loading, response }, exec] = useAxios({ url: '/api/contact', method: 'POST' }, { manual: true });
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<Values>({
     resolver: zodResolver(Schema),

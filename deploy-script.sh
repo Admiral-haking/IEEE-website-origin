@@ -5,6 +5,13 @@
 
 echo "🚀 Starting IEEE Website Auto-Deployment..."
 
+# Optional: load deployment secrets/config from .deploy.env (ignored by git)
+if [ -f .deploy.env ]; then
+  # shellcheck disable=SC1091
+  . ./.deploy.env
+  echo "ℹ️  Loaded config from .deploy.env"
+fi
+
 # Configuration (env-driven)
 PROJECT_DIR="${PROJECT_DIR:-$PWD}"
 SERVER_ID="${SERVER_ID:-}"
@@ -57,18 +64,24 @@ else
     exit 1
 fi
 
-# Step 5: Deploy to server (hand-off to remote-deploy helper if SSH_HOST is set)
-log "🚀 Deploying to server..."
-if [ -n "${SSH_HOST:-}" ]; then
-  log "Using scripts/remote-deploy.sh with SSH_HOST=${SSH_HOST}"
-  SSH_USER="${SSH_USER:-root}" DEPLOY_PATH="${DEPLOY_PATH:-/opt/ieee-website}" PM2_APP_NAME="${PM2_APP_NAME:-IEEE-website}" bash scripts/remote-deploy.sh
-  exit $?
-fi
-
-# Step 6: Create deployment package
+# Step 5: Create deployment package
 log "📦 Creating deployment package (without secrets)..."
 zip -r deployment-package.zip .next package.json package-lock.json next.config.mjs ecosystem.config.js -x "*.git*" "node_modules/*"
 log "✅ Deployment package created"
+
+# Step 6: Deploy to server (hand-off to remote-deploy helper if SSH_HOST is set)
+log "🚀 Deploying to server..."
+if [ -n "${SSH_HOST:-}" ]; then
+  log "Using scripts/remote-deploy.sh with SSH_HOST=${SSH_HOST}"
+  # Avoid double build/pack; pass SKIP_BUILD=1 and forward SSH_* vars
+  SSH_USER="${SSH_USER:-root}" \
+  DEPLOY_PATH="${DEPLOY_PATH:-/opt/ieee-website}" \
+  PM2_APP_NAME="${PM2_APP_NAME:-IEEE-website}" \
+  SSH_KEY_PATH="${SSH_KEY_PATH:-}" \
+  SSH_PASS="${SSH_PASS:-}" \
+  SKIP_BUILD=1 \
+  bash scripts/remote-deploy.sh || exit $?
+fi
 
 echo ""
 log "🎉 Auto-deployment process completed!"

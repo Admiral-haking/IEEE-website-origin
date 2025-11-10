@@ -93,7 +93,7 @@ export default function SignupForm() {
     }
   };
 
-  const labelProps = isRtl ? { sx: { left: 'auto', right: 14, transformOrigin: 'right top', textAlign: 'right' } } : undefined;
+  const labelProps = isRtl ? { sx: { left: 14, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : undefined;
 
   const errResponse = (error as any)?.response as { status?: number; data?: any } | undefined;
   const errText = errResponse

@@ -5,6 +5,10 @@
 
 Next.js app (App Router + TypeScript) for the IEEE Student Branch at Quchan University of Technology — built with MUI v7, react-hook-form + zod, axios/axios-hooks, and Mongoose.
 
+For a comprehensive Persian overview of systems and technologies, see:
+
+- docs/SITE_OVERVIEW_FA.md
+
 ## Requirements
 
 - Node.js 18+ (recommended 18.18+ or 20+)

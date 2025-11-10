@@ -159,7 +159,7 @@ export default function LoginForm({ redirectTo }: Props) {
               </InputAdornment>
             )
           }}
-          InputLabelProps={isRtl ? { sx: { left: 'auto', right: 16, transformOrigin: 'right top', textAlign: 'right' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
+          InputLabelProps={isRtl ? { sx: { left: 16, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
         />
 
         <TextField
@@ -185,7 +185,7 @@ export default function LoginForm({ redirectTo }: Props) {
               </InputAdornment>
             )
           }}
-          InputLabelProps={isRtl ? { sx: { left: 'auto', right: 16, transformOrigin: 'right top', textAlign: 'right' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
+          InputLabelProps={isRtl ? { sx: { left: 16, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
         />
 
         <Stack direction="row" alignItems="center" justifyContent="space-between">

@@ -58,6 +58,7 @@ const UserSchema = new Schema(
     university: { type: String, trim: true },
     major: { type: String, trim: true },
     degree: { type: String, trim: true },
+    sub_disciplines: [{ type: String, trim: true }],
     entry_year: { type: Number },
     ieee_membership_id: { type: String, trim: true },
     membership_status: { type: String, trim: true, enum: ['active', 'expired', 'pending', 'reviewed', 'approved', 'rejected', 'none'], default: 'pending' },

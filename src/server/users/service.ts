@@ -44,6 +44,7 @@ export async function listUsers(opts: { q?: string; page?: number; pageSize?: nu
     
     major: u.major,
     degree: u.degree,
+    sub_disciplines: u.sub_disciplines,
     membership_status: u.membership_status,
     createdAt: u.createdAt,
   }));
@@ -96,6 +97,7 @@ export async function updateUser(id: string, input: UpdateUserInput) {
     if (input.membership_status !== undefined) doc.membership_status = input.membership_status;
     if ((input as any).major !== undefined) doc.major = (input as any).major;
     if ((input as any).degree !== undefined) doc.degree = (input as any).degree;
+    if ((input as any).sub_disciplines !== undefined) doc.sub_disciplines = (input as any).sub_disciplines;
     if ((input as any).social_links !== undefined) doc.social_links = (input as any).social_links;
     if ((input as any).projects !== undefined) doc.projects = (input as any).projects;
     if ((input as any).certificates !== undefined) doc.certificates = (input as any).certificates;

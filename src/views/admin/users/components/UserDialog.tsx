@@ -35,7 +35,7 @@ export default function UserDialog({
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const creating = !initial?.email;
   const activeSchema = React.useMemo(() => (creating ? CreatingSchema : EditingSchema), [creating]);
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setError } = useForm<Values>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setError, setValue, watch } = useForm<Values>({
     resolver: zodResolver(activeSchema as any),
     defaultValues: { name: '', email: '', role: 'volunteer', password: '' }
   });
@@ -51,6 +51,7 @@ export default function UserDialog({
       phone: (initial as any)?.phone || '',
       major: (initial as any)?.major || '',
       degree: (initial as any)?.degree || '',
+      sub_disciplines: ((initial as any)?.sub_disciplines as any) || [],
       membership_status: (initial as any)?.membership_status || 'pending',
       role: (mappedRole as any) || 'member',
       password: ''
@@ -60,7 +61,8 @@ export default function UserDialog({
   const theme = useTheme();
   const isRtl = theme.direction === 'rtl';
   const { t } = useTranslation();
-  const labelProps = isRtl ? { sx: { left: 'auto', right: 14, transformOrigin: 'right top', textAlign: 'right' } } : undefined;
+  // In Farsi (RTL), float labels should anchor top-left per design
+  const labelProps = isRtl ? { sx: { left: 14, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : undefined;
 
   const titleId = React.useId();
   return (
@@ -79,7 +81,37 @@ export default function UserDialog({
             <MenuItem value="computer">{t('computer') || 'Computer'}</MenuItem>
             <MenuItem value="electrical">{t('electrical') || 'Electrical'}</MenuItem>
           </TextField>
-          <TextField label={t('degree') || 'Degree'} {...register('degree')} InputProps={{ startAdornment: (<InputAdornment position="start"><SchoolOutlinedIcon fontSize="small" /></InputAdornment>) }} InputLabelProps={labelProps} />
+          <TextField select label={t('degree') || 'Degree'} defaultValue={(initial as any)?.degree || ''} {...register('degree')} InputProps={{ startAdornment: (<InputAdornment position="start"><SchoolOutlinedIcon fontSize="small" /></InputAdornment>) }} InputLabelProps={labelProps}>
+            <MenuItem value="">{t('all') || '—'}</MenuItem>
+            <MenuItem value="bachelor">{t('degree_bachelor') || 'Bachelor'}</MenuItem>
+            <MenuItem value="master">{t('degree_master') || 'Master'}</MenuItem>
+            <MenuItem value="phd">{t('degree_phd') || 'PhD'}</MenuItem>
+          </TextField>
+          <TextField
+            select
+            label={t('sub_disciplines') as any || 'Sub-disciplines'}
+            SelectProps={{ multiple: true }}
+            value={(watch('sub_disciplines') as any) || []}
+            onChange={(e) => {
+              const v = (e.target as HTMLInputElement).value as unknown as string[] | string;
+              setValue('sub_disciplines' as any, Array.isArray(v) ? v : [v]);
+            }}
+            InputLabelProps={labelProps}
+          >
+            <MenuItem value="telecommunications">{t('telecommunications') as any || 'Telecommunications'}</MenuItem>
+            <MenuItem value="power">{t('power') as any || 'Power'}</MenuItem>
+            <MenuItem value="electronics">{t('electronics') as any || 'Electronics'}</MenuItem>
+            <MenuItem value="control">{t('control') as any || 'Control'}</MenuItem>
+            <MenuItem value="embedded">{t('embedded') as any || 'Embedded'}</MenuItem>
+            <MenuItem value="robotics">{t('robotics') as any || 'Robotics'}</MenuItem>
+            <MenuItem value="ai">{t('ai') as any || 'AI'}</MenuItem>
+            <MenuItem value="networks">{t('networks') as any || 'Networks'}</MenuItem>
+            <MenuItem value="web">{t('web') as any || 'Web'}</MenuItem>
+            <MenuItem value="security">{t('security') as any || 'Security'}</MenuItem>
+            <MenuItem value="data">{t('data') as any || 'Data'}</MenuItem>
+            <MenuItem value="software">{t('software') as any || 'Software'}</MenuItem>
+            <MenuItem value="other">{t('other') as any || 'Other'}</MenuItem>
+          </TextField>
           <TextField select label={t('status') || 'Status'} defaultValue={(initial as any)?.membership_status || 'none'} {...register('membership_status')} InputLabelProps={labelProps}>
             <MenuItem value="active">{t('active') || 'Active'}</MenuItem>
             <MenuItem value="expired">{t('expired') || 'Expired'}</MenuItem>

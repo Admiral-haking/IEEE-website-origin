@@ -53,7 +53,7 @@ export default function OtpLogin({ redirectTo }: Props) {
           onChange={(e) => setPhone(e.target.value)}
           placeholder="09xxxxxxxxx"
           sx={{ '& .MuiOutlinedInput-input': { px: 2 } }}
-          InputLabelProps={isRtl ? { sx: { left: 'auto', right: 16, transformOrigin: 'right top', textAlign: 'right' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
+          InputLabelProps={isRtl ? { sx: { left: 16, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
         />
         <Stack direction="row" spacing={1}>
           <Button variant="outlined" onClick={onRequest} disabled={left > 0}>{left > 0 ? `${left}s` : (t('send_code') || 'Send code')}</Button>
@@ -63,7 +63,7 @@ export default function OtpLogin({ redirectTo }: Props) {
           value={code}
           onChange={(e) => setCode(e.target.value)}
           sx={{ '& .MuiOutlinedInput-input': { px: 2 } }}
-          InputLabelProps={isRtl ? { sx: { left: 'auto', right: 16, transformOrigin: 'right top', textAlign: 'right' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
+          InputLabelProps={isRtl ? { sx: { left: 16, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
         />
         <Button variant="contained" color="secondary" onClick={onVerify}>{t('verify_code') || 'Verify'}</Button>
       </Stack>

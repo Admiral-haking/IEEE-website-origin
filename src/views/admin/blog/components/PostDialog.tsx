@@ -35,7 +35,7 @@ export default function PostDialog({ open, onClose, initial, onSubmit }: {
   const coverSrc = coverId ? `/api/media/${coverId}` : '';
   const theme = useTheme();
   const isRtl = theme.direction === 'rtl';
-  const labelProps = isRtl ? { sx: { left: 'auto', right: 14, transformOrigin: 'right top', textAlign: 'right' } } : undefined;
+  const labelProps = isRtl ? { sx: { left: 14, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : undefined;
 
   const titleId = React.useId();
   return (

@@ -27,7 +27,7 @@ import { Checkbox, FormControlLabel, Popover } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { usePathname } from 'next/navigation';
 
-export type UserRow = { id: string; name?: string; email: string; username?: string; role: 'member'|'volunteer'|'executive'|'admin'|'user'|'professor'; phone?: string; university?: string; major?: string; degree?: string; membership_status?: string; createdAt?: string };
+export type UserRow = { id: string; name?: string; email: string; username?: string; role: 'member'|'volunteer'|'executive'|'admin'|'user'|'professor'; phone?: string; university?: string; major?: string; degree?: string; sub_disciplines?: string[]; membership_status?: string; createdAt?: string };
 
 export default function UserTable({ onEdit, onDelete, filters, refresh = 0 }: { onEdit: (u: UserRow) => void; onDelete: (u: UserRow) => void; filters?: { q?: string; role?: string; status?: string }; refresh?: number }) {
   const { t } = useTranslation();
@@ -45,11 +45,12 @@ export default function UserTable({ onEdit, onDelete, filters, refresh = 0 }: { 
   const [{ data, loading, error }, refetch] = useAxios({ url: '/api/users', params });
   const onExport = () => {
     const rows: string[] = [];
-    const headers = ['name','full_name','email','username','role','phone','university','major','degree','status','createdAt'];
+    const headers = ['name','full_name','email','username','role','phone','university','major','degree','sub_disciplines','status','createdAt'];
     rows.push(headers.join(','));
     (items || []).forEach((u:any) => {
       const role = u.role === 'professor' ? 'executive' : u.role === 'user' ? 'member' : u.role;
-      const vals = [u.name||'', u.full_name||'', u.email||'', u.username||'', role||'', u.phone||'', u.university||'', u.major||'', u.degree||'', u.membership_status||'', u.createdAt||''];
+      const subs = Array.isArray(u.sub_disciplines) ? u.sub_disciplines.join(';') : '';
+      const vals = [u.name||'', u.full_name||'', u.email||'', u.username||'', role||'', u.phone||'', u.university||'', u.major||'', u.degree||'', subs, u.membership_status||'', u.createdAt||''];
       rows.push(vals.map((v)=>`"${String(v).replace(/"/g,'""')}"`).join(','));
     });
     const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -72,6 +73,7 @@ export default function UserTable({ onEdit, onDelete, filters, refresh = 0 }: { 
     university: true,
     major: true,
     degree: true,
+    sub_disciplines: true,
     status: true,
   });
   React.useEffect(() => {
@@ -121,6 +123,7 @@ export default function UserTable({ onEdit, onDelete, filters, refresh = 0 }: { 
               {cols.university && <TableCell>{t('university')}</TableCell>}
               {cols.major && <TableCell>{t('major')}</TableCell>}
               {cols.degree && <TableCell>{t('degree')}</TableCell>}
+              {cols.sub_disciplines && <TableCell>{t('sub_disciplines') as any || 'Sub-disciplines'}</TableCell>}
               
               {cols.status && <TableCell>{t('status')}</TableCell>}
               <TableCell align="right">{t('actions')}</TableCell>
@@ -157,6 +160,15 @@ export default function UserTable({ onEdit, onDelete, filters, refresh = 0 }: { 
                 {cols.university && <TableCell>{u.university || '—'}</TableCell>}
                 {cols.major && <TableCell>{u.major || '—'}</TableCell>}
                 {cols.degree && <TableCell>{u.degree || '—'}</TableCell>}
+                {cols.sub_disciplines && <TableCell>
+                  {Array.isArray(u.sub_disciplines) && u.sub_disciplines.length > 0
+                    ? (
+                      <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+                        {u.sub_disciplines.map((s: string, i: number) => (<Chip key={i} size="small" variant="outlined" label={s} />))}
+                      </Stack>
+                    )
+                    : '—'}
+                </TableCell>}
                 
                 {cols.status && <TableCell>{u.membership_status || '—'}</TableCell>}
                 <TableCell align="right">

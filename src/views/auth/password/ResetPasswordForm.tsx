@@ -81,7 +81,7 @@ export default function ResetPasswordForm({ token, locale }: { token: string; lo
               </InputAdornment>
             )
           }}
-          InputLabelProps={isRtl ? { sx: { left: 'auto', right: 14, transformOrigin: 'right top', textAlign: 'right' } } : undefined}
+          InputLabelProps={isRtl ? { sx: { left: 14, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : undefined}
         />
         <TextField
           type={showPassword ? 'text' : 'password'}
@@ -98,7 +98,7 @@ export default function ResetPasswordForm({ token, locale }: { token: string; lo
               </InputAdornment>
             )
           }}
-          InputLabelProps={isRtl ? { sx: { left: 'auto', right: 14, transformOrigin: 'right top', textAlign: 'right' } } : undefined}
+          InputLabelProps={isRtl ? { sx: { left: 14, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : undefined}
         />
         <Button type="submit" variant="contained" color="secondary" disabled={isSubmitting || loading}>
           {t('password_reset_cta') as string}

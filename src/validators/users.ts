@@ -2,6 +2,23 @@ import { z } from 'zod';
 
 export const UserRoleSchema = z.enum(['member', 'volunteer', 'executive', 'admin']);
 
+// Sub-disciplines / branches across Computer & Electrical
+export const SubDisciplineSchema = z.enum([
+  'telecommunications',
+  'power',
+  'electronics',
+  'control',
+  'embedded',
+  'robotics',
+  'ai',
+  'networks',
+  'web',
+  'security',
+  'data',
+  'software',
+  'other',
+]);
+
 const PasswordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
@@ -41,6 +58,7 @@ export const UpdateUserSchema = z.object({
   phone: z.string().min(5).optional(),
   major: z.enum(['computer','electrical']).optional(),
   degree: z.enum(['bachelor','master','phd']).optional(),
+  sub_disciplines: z.array(SubDisciplineSchema).optional(),
   student_id: z.string().min(5).optional(),
   bio: z.string().optional(),
   social_links: z
@@ -82,6 +100,7 @@ export const ProfileRequiredSchema = z.object({
   university: z.string().optional(),
   major: z.enum(['computer','electrical']),
   degree: z.enum(['bachelor','master','phd']),
+  sub_disciplines: z.array(SubDisciplineSchema).optional(),
   entry_year: z.coerce.number().int().optional(),
   student_id: z.string().min(5),
   ieee_membership_id: z.string().optional(),
