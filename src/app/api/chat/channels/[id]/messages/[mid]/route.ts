@@ -4,10 +4,10 @@ import { requireRoleOrPermission } from '@/server/auth/guard';
 import { AppError } from '@/server/errors';
 import ChannelMessage from '@/models/ChannelMessage';
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string; mid: string } }) {
+export async function DELETE(_: NextRequest, context: any) {
   try { await requireRoleOrPermission({ minRole: 'executive', permission: 'operations.chatModeration' }); } catch { return NextResponse.json({ error: 'Forbidden' }, { status: 403 }); }
   try {
-    const { id, mid } = params;
+    const { id, mid } = (context?.params || {}) as { id: string; mid: string };
     const res = await ChannelMessage.deleteOne({ _id: mid, channelId: id });
     if (!res || res.deletedCount === 0) throw new AppError('Not Found', 404);
     return NextResponse.json({ ok: true });

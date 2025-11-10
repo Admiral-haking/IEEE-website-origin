@@ -5,17 +5,17 @@ import { requireRoleOrPermission } from '@/server/auth/guard';
 import { AppError } from '@/server/errors';
 import Project from '@/models/Project';
 
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function GET(_: NextRequest, context: any) {
+  const { id } = (context?.params || {}) as { id: string };
   const p = await Project.findById(id).lean();
   if (!p || !p.published) return NextResponse.json({ error: 'Not Found' }, { status: 404 });
   return NextResponse.json({ project: { id: String(p._id), title: p.title, description: p.description, tags: p.tags || [], status: p.status, team_members: (p.team_members || []).map((id: any) => String(id)), createdBy: String(p.createdBy), locale: p.locale, published: !!p.published, createdAt: p.createdAt } });
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: any) {
   try {
     const token = await getTokenFromCookies();
-    const { id } = params;
+    const { id } = (context?.params || {}) as { id: string };
     const p = await Project.findById(id).lean();
     if (!p) throw new AppError('Not Found', 404);
     const isOwner = String(p.createdBy) === token.sub;
@@ -36,10 +36,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, context: any) {
   try {
     const token = await getTokenFromCookies();
-  const { id } = params;
+  const { id } = (context?.params || {}) as { id: string };
     const p = await Project.findById(id).lean();
     if (!p) throw new AppError('Not Found', 404);
     const isOwner = String(p.createdBy) === token.sub;

@@ -3,8 +3,8 @@ import { getBucket, deleteFile } from '@/server/media/gridfs';
 import { requireRoleAtLeast } from '@/server/auth/guard';
 import { ObjectId } from 'mongodb';
 
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
-  const { id: idParam } = params;
+export async function GET(_: NextRequest, context: any) {
+  const { id: idParam } = (context?.params || {}) as { id: string };
   const id = new ObjectId(idParam);
   const files = await getBucket().find({ _id: id }).toArray();
   if (!files[0]) return new Response('Not found', { status: 404 });
@@ -16,9 +16,9 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
   return new Response(stream as any, { headers });
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, context: any) {
   await requireRoleAtLeast('professor');
-  const { id } = params;
+  const { id } = (context?.params || {}) as { id: string };
   await deleteFile(id);
   return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json' } });
 }
