@@ -62,7 +62,12 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
+          # Prefer SSH key; fallback to password if provided
           key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASS }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          # Optional: verify server host key
+          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
           source: "deployment-package.zip"
           target: ${{ secrets.DEPLOY_PATH }}
 
@@ -72,6 +77,9 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASS }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
           script: |
             set -euo pipefail
             mkdir -p ${{ secrets.DEPLOY_PATH }}
