@@ -23,10 +23,10 @@ This document describes the complete deployment and automation system for the IE
    ```
 
 ### Automated Deployment
-Run the automation script:
+Run the unified deploy CLI:
 ```bash
 cd /home/alikheiri/IEEE-origin
-./auto-deploy.sh
+bash ./deploy.sh ship
 ```
 
 ## 🔧 Manual Deployment Steps
@@ -96,12 +96,17 @@ Two workflows are provided:
 - CI (`.github/workflows/ci.yml`): install, lint, build on pushes/PRs
 - Deploy (`.github/workflows/deploy.yml`): auto-deploys on push to `main` (with approval if environment requires it)
 
-### Required Secrets (Repository Settings → Secrets and variables → Actions)
+### Required GitHub Secrets (Settings → Secrets and variables → Actions)
 - `SSH_HOST` — e.g., `91.107.178.13`
 - `SSH_USER` — e.g., `root`
-- `SSH_KEY` — private key (PEM) with access to the server
+- One of the following authentication methods:
+  - `SSH_KEY` — private key (PEM, full contents) for server access
+  - or `SSH_PASS` — SSH password for the user (less secure)
 - `DEPLOY_PATH` — e.g., `/opt/ieee-website`
-- Optional: `PM2_APP_NAME` (default: `IEEE-website`)
+- Optional:
+  - `PM2_APP_NAME` — defaults to `IEEE-website`
+  - `SSH_PASSPHRASE` — if your SSH key is passphrase-protected
+  - `SSH_FINGERPRINT` — server host key fingerprint for strict verification
 
 ### Environment protection & approval
 - In GitHub → Settings → Environments → `production`:
@@ -115,6 +120,25 @@ With this setup, only one command is needed to release:
 2) GitHub Actions runs CI and build automatically.
 3) You approve the `production` environment when checks pass (click Approve).
 4) Workflow deploys to the server and runs a health check.
+
+### Local CLI (deploy.sh) Examples
+```bash
+# Build + pack + upload + remote deploy
+bash ./deploy.sh ship
+
+# Only upload existing deployment-package.zip and run remote steps
+bash ./deploy.sh deploy
+
+# Push local .env.local to the server and restart PM2
+bash ./deploy.sh env:push
+
+# Show PM2 status and recent logs
+bash ./deploy.sh status
+```
+
+### Security Notes
+- Do not commit `.deploy.env` or any credentials to git. `.gitignore` already excludes it.
+- If any secret was accidentally exposed, rotate it on the server and update GitHub Secrets immediately.
 
 ## 📊 Monitoring
 

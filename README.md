@@ -112,8 +112,8 @@ For a comprehensive Persian overview of systems and technologies, see:
 - دیپلوی و عملیات:
   - PM2: `ecosystem.config.js` (اجرای `npm start`)
   - بسته‌سازی بدون اسرار: `npm run pack` → `deployment-package.zip`
-  - اسکریپت خودکار راه‌دور: `scripts/remote-deploy.sh` (نیازمند `SSH_HOST`, `DEPLOY_PATH`, ...)
-  - راهنمای کامل: `DEPLOYMENT_GUIDE.md` و اسکریپت‌های `auto-deploy.sh` و `deploy-script.sh`
+  - اسکریپت واحد عملیات: `deploy.sh` (زیرفرمان‌ها: ship, deploy, env:push, status)
+  - راهنمای کامل: `DEPLOYMENT_GUIDE.md`
 
 - خطاهای رایج توسعه و رفع آن:
   - خطاهای `.next/` یا مانفیست/چانک: فقط یک dev را باز نگه دارید و `npm run dev` (پاک‌سازی + اجرا) را استفاده کنید.
@@ -220,7 +220,7 @@ If SMTP is not configured, messages are still saved to MongoDB and the API respo
 
 ## Deployment
 
-- Local packaging (no secrets): see `DEPLOYMENT_GUIDE.md` or run `./auto-deploy.sh`.
+- Local packaging (no secrets): see `DEPLOYMENT_GUIDE.md` or run `bash ./deploy.sh pack`.
 - PM2 config: `ecosystem.config.js` (runs `npm start`).
 - GitHub Actions:
   - CI: `.github/workflows/ci.yml`

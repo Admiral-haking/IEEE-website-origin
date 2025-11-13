@@ -124,14 +124,14 @@ npm start
 
 ## دیپلوی و عملیات (Ops)
 - PM2 برای اجرای پایدار Node.js (`ecosystem.config.js` → `npm start`)
-- اسکریپت‌های خودکار: `deploy-script.sh`, `auto-deploy.sh`, `scripts/remote-deploy.sh`
+- اسکریپت واحد عملیات: `deploy.sh` (زیرفرمان‌ها: ship, deploy, env:push, status)
 - CI/CD: GitHub Actions (`.github/workflows/deploy.yml`) با انتقال artifact، SSH و health check
 - سرور تولید: Nginx به‌عنوان Reverse Proxy (در راهنما توضیح داده شده)
 
 گام سریع:
 ```bash
 # مقداردهی در .deploy.env (لوکال) و سپس:
-npm run ship
+bash ./deploy.sh ship
 ```
 جزئیات بیشتر: `DEPLOYMENT_GUIDE.md`
 
@@ -157,4 +157,3 @@ npm run ship
 
 ---
 به‌روزرسانی: 2025-11-10
-

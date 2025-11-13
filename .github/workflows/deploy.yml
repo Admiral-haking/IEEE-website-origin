@@ -35,8 +35,7 @@ jobs:
         run: npm run build
 
       - name: Pack artifact
-        run: |
-          zip -r deployment-package.zip .next package.json package-lock.json next.config.mjs ecosystem.config.js -x "*.git*" "node_modules/*"
+        run: npm run pack
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -70,6 +69,7 @@ jobs:
           fingerprint: ${{ secrets.SSH_FINGERPRINT }}
           source: "deployment-package.zip"
           target: ${{ secrets.DEPLOY_PATH }}
+          overwrite: true
 
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
