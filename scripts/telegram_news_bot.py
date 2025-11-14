@@ -37,9 +37,9 @@ def load_dotenv(path: str = ".env") -> None:
 load_dotenv()
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_WEBHOOK_SECRET = os.environ.get("TELEGRAM_WEBHOOK_SECRET") or os.environ.get("BOT_API_SECRET", "")
+TELEGRAM_WEBHOOK_SECRET = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
 NEWS_API_URL = os.environ.get("NEWS_API_URL", "")
-ALLOWED_CHAT_ID = os.environ.get("TELEGRAM_ALLOWED_CHAT_ID") or os.environ.get("ALLOWED_CHAT_ID")
+ALLOWED_CHAT_ID = os.environ.get("TELEGRAM_ALLOWED_CHAT_ID")
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")
 
 LOG_FILE = os.environ.get("NEWS_BOT_LOG_FILE", "/var/log/ieee-news-bot.log")

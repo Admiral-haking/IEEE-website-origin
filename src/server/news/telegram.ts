@@ -119,6 +119,58 @@ async function generateNewsImage(prompt: string | undefined | null): Promise<str
 
 export type NewsResult = { enId: string; faId: string; slugEn: string; slugFa: string };
 
+async function saveTelegramPhotoFromMessage(msg: TelegramMessage): Promise<string | null> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token || !msg.photo || msg.photo.length === 0) return null;
+  try {
+    const apiBase = process.env.TELEGRAM_API_BASE || 'https://api.telegram.org';
+    const last = msg.photo[msg.photo.length - 1];
+    const fileId = last.file_id;
+    if (!fileId) return null;
+    const fileRes = await fetch(
+      `${apiBase}/bot${token}/getFile?file_id=${encodeURIComponent(fileId)}`,
+      { cache: 'no-store' },
+    );
+    if (!fileRes.ok) {
+      await fileRes.text().catch(() => {});
+      return null;
+    }
+    const fileJson: any = await fileRes.json();
+    const filePath: string | undefined = fileJson?.result?.file_path;
+    if (!filePath) return null;
+
+    const fileUrl = `${apiBase}/file/bot${token}/${filePath}`;
+    const imgRes = await fetch(fileUrl, { cache: 'no-store' });
+    if (!imgRes.ok) {
+      await imgRes.arrayBuffer().catch(() => {});
+      return null;
+    }
+    const buf = Buffer.from(await imgRes.arrayBuffer());
+    const base64 = buf.toString('base64');
+
+    const lower = filePath.toLowerCase();
+    const ext = lower.split('.').pop() || 'jpg';
+    const contentType =
+      ext === 'png'
+        ? 'image/png'
+        : ext === 'webp'
+          ? 'image/webp'
+          : ext === 'gif'
+            ? 'image/gif'
+            : 'image/jpeg';
+
+    const saved = await saveBase64File(
+      `telegram-original.${ext}`,
+      contentType,
+      base64,
+      { kind: 'blog-cover-original', source: 'telegram-bot', filePath },
+    );
+    return String((saved as any)?._id || (saved as any)?.id || '');
+  } catch {
+    return null;
+  }
+}
+
 export async function generateNewsFromText(
   text: string,
   authorLabel: string,
@@ -187,8 +239,8 @@ Rules:
 
   const coverPrompt = `High-quality illustrative image for a technology / university news article titled "${parsed.title_en}". No text in the image.`;
   const autoCoverFileId = await generateNewsImage(coverPrompt);
-  // Prefer AI-generated image; fall back to original Telegram photo if AI fails.
-  const coverFileId = (autoCoverFileId || coverFileIdOverride) || undefined;
+  // Prefer original Telegram photo when provided; fall back to AI image.
+  const coverFileId = (coverFileIdOverride || autoCoverFileId) || undefined;
 
   const slugBaseEn = toSlugBase(parsed.slug_en || parsed.title_en);
   const slugBaseFa = toSlugBase(parsed.slug_fa || parsed.title_fa);
@@ -276,7 +328,7 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
   // Ignore commands like /start
   if (!text || text.startsWith('/')) return { skipped: true };
 
-  const allowedChat = process.env.TELEGRAM_ALLOWED_CHAT_ID || process.env.ALLOWED_CHAT_ID;
+  const allowedChat = process.env.TELEGRAM_ALLOWED_CHAT_ID;
   if (allowedChat && msg.chat && String(msg.chat.id) !== String(allowedChat)) {
     return { skipped: true };
   }
@@ -286,8 +338,8 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
     : msg.from?.first_name
       ? `telegram:${msg.from.first_name} ${msg.from.last_name || ''}`.trim()
       : 'telegram-bot';
-
-  const result = await generateNewsFromText(text, authorLabel);
+  const originalCoverFileId = await saveTelegramPhotoFromMessage(msg);
+  const result = await generateNewsFromText(text, authorLabel, originalCoverFileId || undefined);
 
   try {
     if (msg.chat?.id != null) {

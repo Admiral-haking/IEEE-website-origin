@@ -62,9 +62,9 @@ SSH
 ## ⚙️ Configuration Files
 
 ### Environment Variables
-- Do NOT include `.env.local` in deployment packages.
-- Create and manage env vars on the server at `/opt/ieee-website/.env.local`.
-  - See `.env.example` for required keys.
+- Do NOT include local env files in deployment packages.
+- Create and manage env vars on the server at `/opt/ieee-website/.env.local` (or `.env` if you prefer a single file).
+  - See `.env` in the repo for the full list of required keys and defaults.
 
 ### Nginx Configuration
 The server includes Nginx configuration for reverse proxy.

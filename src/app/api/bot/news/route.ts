@@ -68,12 +68,10 @@ async function saveTelegramPhoto(body: any): Promise<string | null> {
 }
 
 export async function POST(req: NextRequest) {
-  const expectedPrimary = process.env.TELEGRAM_WEBHOOK_SECRET;
-  const expectedLegacy = process.env.BOT_API_SECRET;
-  const expected = expectedPrimary || expectedLegacy;
   const secretFromHeader = req.headers.get('x-telegram-bot-api-secret-token');
+  const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
 
-  if (!expected || secretFromHeader !== expected) {
+  if (!expected || !secretFromHeader || secretFromHeader !== expected) {
     return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
   }
 
