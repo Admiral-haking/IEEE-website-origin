@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Box, Button, Container, Stack, TextField, Typography, Chip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, IconButton, Tooltip } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import useAxios from 'axios-hooks';
 import axios from 'axios';
 import SolutionDialog from './components/SolutionDialog';
@@ -17,7 +18,8 @@ export default function SolutionsAdminView() {
   const { t } = useTranslation();
   const [query, setQuery] = React.useState('');
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const isMobile = useMediaQuery('(max-width:600px)');
+  const [rowsPerPage, setRowsPerPage] = React.useState(() => (isMobile ? 5 : 10));
   const [open, setOpen] = React.useState(false);
   const [publishedOnly, setPublishedOnly] = React.useState(false);
   const [initial, setInitial] = React.useState<Partial<Row> | undefined>(undefined);

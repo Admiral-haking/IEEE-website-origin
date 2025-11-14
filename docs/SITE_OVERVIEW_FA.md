@@ -99,13 +99,15 @@
 فایل نمونه: `.env.example`
 
 - پایگاه‌داده: `MONGODB_URI`
-- احراز هویت: `JWT_SECRET`
+- احراز هویت: `JWT_SECRET`, `ALLOW_FIRST_ADMIN_SIGNUP`
 - URLها: `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_BASE_URL`
 - Redis (اختیاری): `REDIS_URL` یا `UPSTASH_REDIS_REST_URL`
 - ایمیل: `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `MAIL_TO`, `MAIL_BRAND`(اختیاری)
 - OTP: `OTP_WINDOW_SEC`, `OTP_LIMIT_PER_PHONE`, `OTP_LIMIT_PER_IP`, `OTP_CODE_TTL` (اختیاری)
 - SMS: `SMS_API_URL`, `SMS_API_KEY`, `SMS_SENDER` (یا `SHAPARAK_*`)
 - کپچا (اختیاری): `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+- AI (اختیاری): `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `DEEPSEEK_BASE_URL`
+- CSP (اختیاری): `CSP_LEVEL` (`dev` / `standard` / `strict`؛ برای production معمولاً `standard` پیشنهاد می‌شود؛ `strict` فقط در صورت آشنایی با تنظیم nonce/hash برای اسکریپت‌ها)
 
 ## توسعه محلی
 ```bash

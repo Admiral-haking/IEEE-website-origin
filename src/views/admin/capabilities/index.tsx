@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Box, Button, Container, Stack, TextField, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, IconButton, Tooltip } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import useAxios from 'axios-hooks';
 import axios from 'axios';
 import CapabilityDialog from './components/CapabilityDialog';
@@ -16,8 +17,9 @@ type Row = { id: string; title: string; slug?: string; area: 'software'|'hardwar
 export default function CapabilitiesAdminView() {
   const { t } = useTranslation();
   const [query, setQuery] = React.useState('');
+  const isMobile = useMediaQuery('(max-width:600px)');
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [rowsPerPage, setRowsPerPage] = React.useState(() => (isMobile ? 5 : 10));
   const [open, setOpen] = React.useState(false);
   const [initial, setInitial] = React.useState<Partial<Row> | undefined>(undefined);
   const [confirm, setConfirm] = React.useState<{ open: boolean; row?: Row }>({ open: false });

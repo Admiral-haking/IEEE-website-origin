@@ -2,6 +2,7 @@ import '@/lib/mongoose';
 import Job from '@/models/Job';
 import { AppError } from '@/server/errors';
 import { CreateJobInput, UpdateJobInput } from './validators';
+import { sanitizeRichText } from '@/server/html/sanitize';
 
 export async function listJobs(opts: { q?: string; page?: number; pageSize?: number; locale?: 'en'|'fa' }) {
   const page = Math.max(1, opts.page || 1);
@@ -27,7 +28,10 @@ export async function listJobs(opts: { q?: string; page?: number; pageSize?: num
 export async function createJob(input: CreateJobInput) {
   const exists = await Job.findOne({ slug: input.slug }).lean();
   if (exists) throw new AppError('Slug already exists', 409);
-  const created = await Job.create(input);
+  const created = await Job.create({
+    ...input,
+    descriptionHtml: sanitizeRichText(input.descriptionHtml),
+  });
   return { id: String(created._id), title: created.title, slug: created.slug, published: created.published };
 }
 
@@ -36,7 +40,11 @@ export async function updateJob(id: string, input: UpdateJobInput) {
     const dup = await Job.findOne({ slug: input.slug, _id: { $ne: id } }).lean();
     if (dup) throw new AppError('Slug already exists', 409);
   }
-  const updated = await Job.findByIdAndUpdate(id, { $set: input }, { new: true }).lean();
+  const patch: UpdateJobInput = { ...input };
+  if (patch.descriptionHtml !== undefined) {
+    patch.descriptionHtml = sanitizeRichText(patch.descriptionHtml);
+  }
+  const updated = await Job.findByIdAndUpdate(id, { $set: patch }, { new: true }).lean();
   if (!updated) throw new AppError('Job not found', 404);
   return { id: String(updated._id), title: updated.title, slug: updated.slug, published: updated.published };
 }

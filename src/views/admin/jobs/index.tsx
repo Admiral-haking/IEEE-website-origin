@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Box, Button, Container, IconButton, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Tooltip, Typography } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import useAxios from 'axios-hooks';
 import axios from 'axios';
 import JobDialog from './components/JobDialog';
@@ -15,8 +16,9 @@ type Row = { id: string; title: string; slug: string; type: string; location: st
 
 export default function JobsAdminView() {
   const { t } = useTranslation();
+  const isMobile = useMediaQuery('(max-width:600px)');
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [rowsPerPage, setRowsPerPage] = React.useState(() => (isMobile ? 5 : 10));
   const [open, setOpen] = React.useState(false);
   const [initial, setInitial] = React.useState<Partial<Row> | undefined>(undefined);
   const [confirm, setConfirm] = React.useState<{ open: boolean; row?: Row }>({ open: false });

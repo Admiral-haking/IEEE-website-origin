@@ -514,5 +514,7 @@
     "settings_ui_hyperspeed_hint": "افکت سه‌بعدی پس‌زمینه صفحه اصلی",
     "settings_ui_hyperspeed_length": "طول",
     "settings_ui_hyperspeed_road": "عرض جاده",
-    "settings_ui_hyperspeed_island": "عرض جزیره"
+    "settings_ui_hyperspeed_island": "عرض جزیره",
+    "settings_ui_team": "نمایش تیم",
+    "settings_ui_team_group_order": "ترتیب گروه‌ها (با ویرگول جدا)"
 }

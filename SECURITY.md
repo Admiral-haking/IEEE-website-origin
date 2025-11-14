@@ -14,4 +14,5 @@ Active development on `main`. Please update to the latest commit.
 
 ## Secrets
 - Do not commit secrets. Use `.env.local` locally and server-managed env in production.
-
+- Sample env files (`.env.example`, `.env.production.example`) must only contain placeholders.
+- If any real key (for example `OPENAI_API_KEY`) has ever been committed, it must be revoked/rotated in the provider dashboard and updated on all servers.

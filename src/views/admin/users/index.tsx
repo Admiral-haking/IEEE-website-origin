@@ -17,12 +17,12 @@ export default function UsersView() {
   const [initial, setInitial] = React.useState<UserRow | undefined>(undefined);
   const [query, setQuery] = React.useState('');
   const [role, setRole] = React.useState<string>('');
-  
   const [status, setStatus] = React.useState<string>('');
+  const [active, setActive] = React.useState<string>('');
   const [refresh, setRefresh] = React.useState(0);
   const [confirm, setConfirm] = React.useState<{ open: boolean; user?: UserRow }>({ open: false });
   const { t } = useTranslation();
-  const [, refetchList] = useAxios({ url: '/api/users', params: { q: query, role, status } }, { manual: true });
+  const [, refetchList] = useAxios({ url: '/api/users', params: { q: query, role, status, active } }, { manual: true });
   const [, createUser] = useAxios({ url: '/api/users', method: 'POST' }, { manual: true });
   const [, updateUser] = useAxios({ method: 'PATCH' }, { manual: true });
   const [, deleteUser] = useAxios({ method: 'DELETE' }, { manual: true });
@@ -84,12 +84,17 @@ export default function UsersView() {
             <MenuItem value="pending">{t('pending') || 'Pending'}</MenuItem>
             <MenuItem value="none">{t('none') || 'None'}</MenuItem>
           </TextField>
-          <Button variant="outlined" onClick={() => { setQuery(''); setRole(''); setStatus(''); setRefresh((n) => n + 1); }}>{t('refresh')}</Button>
+          <TextField select label={t('active') as any || 'Active'} size="small" value={active} onChange={(e) => setActive(e.target.value)} sx={{ minWidth: 140 }}>
+            <MenuItem value="">{t('all') || 'All'}</MenuItem>
+            <MenuItem value="true">{t('active') || 'Active'}</MenuItem>
+            <MenuItem value="false">{t('inactive') || 'Inactive'}</MenuItem>
+          </TextField>
+          <Button variant="outlined" onClick={() => { setQuery(''); setRole(''); setStatus(''); setActive(''); setRefresh((n) => n + 1); }}>{t('refresh')}</Button>
           <Button variant="contained" color="secondary" onClick={onAdd}>{t('add_user')}</Button>
         </Stack>
       </Stack>
 
-      <UserTable onEdit={onEdit} onDelete={(u) => setConfirm({ open: true, user: u })} filters={{ q: query, role, status }} refresh={refresh} />
+      <UserTable onEdit={onEdit} onDelete={(u) => setConfirm({ open: true, user: u })} filters={{ q: query, role, status, active }} refresh={refresh} />
 
       <UserDialog open={open} onClose={() => setOpen(false)} initial={initial as any} onSubmit={onSubmit} />
 

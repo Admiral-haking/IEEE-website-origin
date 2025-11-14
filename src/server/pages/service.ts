@@ -1,5 +1,6 @@
 import '@/lib/mongoose';
 import StaticPage from '@/models/StaticPage';
+import { sanitizeRichText } from '@/server/html/sanitize';
 
 export async function getPage(key: 'privacy' | 'terms' | 'contact' | 'about', locale: 'en' | 'fa') {
   let doc: any = await StaticPage.findOne({ key, locale }).lean();
@@ -10,9 +11,13 @@ export async function getPage(key: 'privacy' | 'terms' | 'contact' | 'about', lo
 }
 
 export async function updatePage(key: 'privacy' | 'terms' | 'contact' | 'about', locale: 'en' | 'fa', data: any) {
+  const patch: any = { ...data };
+  if (typeof patch.contentHtml === 'string') {
+    patch.contentHtml = sanitizeRichText(patch.contentHtml);
+  }
   const updated = await StaticPage.findOneAndUpdate(
     { key, locale },
-    { $set: data },
+    { $set: patch },
     { new: true, upsert: true }
   ).lean();
   return toDto(updated!);

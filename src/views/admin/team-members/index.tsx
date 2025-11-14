@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Box, Button, Container, IconButton, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Tooltip, Typography, TextField, Chip } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import AdminAccessAlert from '@/components/AdminAccessAlert';
 import useAxios from 'axios-hooks';
 import axios from 'axios';
@@ -16,13 +17,14 @@ type Row = { id: string; name: string; email?: string; role: string; discipline:
 
 export default function TeamMembersAdminView() {
   const { t } = useTranslation();
+  const isMobile = useMediaQuery('(max-width:600px)');
   const pathname = usePathname();
   const parts = (pathname || '/').split('/').filter(Boolean);
   const locale = parts[0] === 'en' || parts[0] === 'fa' ? (parts[0] as 'en'|'fa') : 'en';
 
   const [query, setQuery] = React.useState('');
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [rowsPerPage, setRowsPerPage] = React.useState(() => (isMobile ? 5 : 10));
   const [open, setOpen] = React.useState(false);
   const [initial, setInitial] = React.useState<Partial<Row> | undefined>(undefined);
   const [confirm, setConfirm] = React.useState<{ open: boolean; row?: Row }>({ open: false });

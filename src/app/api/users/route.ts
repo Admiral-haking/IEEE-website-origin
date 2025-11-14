@@ -13,7 +13,9 @@ export async function GET(req: NextRequest) {
     const pageSize = Number(searchParams.get('pageSize') || searchParams.get('limit') || '10');
     const role = searchParams.get('role') || undefined;
     const status = searchParams.get('status') || undefined;
-    const data = await listUsers({ q, page, pageSize, role, status });
+    const activeParam = searchParams.get('active');
+    const active = activeParam === 'true' ? true : activeParam === 'false' ? false : undefined;
+    const data = await listUsers({ q, page, pageSize, role, status, active });
     return NextResponse.json(data);
   } catch (err: any) {
     if (err?.issues) {

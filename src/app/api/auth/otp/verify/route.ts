@@ -23,8 +23,12 @@ export async function POST(req: NextRequest) {
 
     let user = await User.findOne({ phone: p }).lean();
     if (!user) {
-      const count = await User.countDocuments();
-      const role: 'admin'|'volunteer' = count === 0 ? 'admin' : 'volunteer';
+      const allowFirstAdmin = (process.env.ALLOW_FIRST_ADMIN_SIGNUP || '').toLowerCase() === 'true';
+      let role: 'admin'|'volunteer' = 'volunteer';
+      if (allowFirstAdmin) {
+        const count = await User.countDocuments();
+        role = count === 0 ? 'admin' : 'volunteer';
+      }
       const created = await User.create({ email: `${p}@users.local`, name: '', passwordHash: '', role, phone: p, phoneVerified: true, membership_status: 'pending' });
       user = { _id: created._id, email: created.email, name: created.name, role: created.role, phone: created.phone, phoneVerified: true } as any;
     } else if (!user.phoneVerified) {

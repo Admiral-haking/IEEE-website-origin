@@ -33,7 +33,7 @@ export default function VolunteerDashboardPage() {
     if (!me?.user) return;
     void execNotif().catch(() => {});
     void execEvents().catch(() => {});
-  }, [!!me?.user, execNotif, execEvents]);
+  }, [me?.user, execNotif, execEvents]);
   const completionPercent = React.useMemo(() => {
     const u = (me?.user || {}) as any;
     const checks: Array<[any, (v: any) => boolean]> = [

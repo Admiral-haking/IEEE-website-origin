@@ -5,12 +5,14 @@ import NextLink from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Alert, Box, Paper, Stack, Typography, Chip, Avatar, TextField, MenuItem, Divider, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import Grid from '@mui/material/Grid';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import useAxios from 'axios-hooks';
 import { useTranslation } from 'react-i18next';
 import useLocale from '@/hooks/useLocale';
 const allowAll = () => true;
 
 export default function AdminDashboardView() {
+  const isMobile = useMediaQuery('(max-width:600px)');
   const locale = useLocale();
   const [{ data: me }] = useAxios({ url: '/api/auth/me', validateStatus: allowAll });
   const rawRole: 'member'|'volunteer'|'executive'|'admin'|'user'|'professor' = me?.user?.role || 'member';
@@ -104,9 +106,9 @@ export default function AdminDashboardView() {
     );
   };
   return (
-    <Box>
+    <Box sx={{ py: { xs: 2, md: 3 } }}>
       <Typography
-        variant="h5"
+        variant={isMobile ? 'h6' : 'h5'}
         component="h1"
         fontWeight={800}
         gutterBottom
@@ -118,15 +120,15 @@ export default function AdminDashboardView() {
       >
         {`${t('dashboard') || 'Dashboard'} — ${roleLabel}`}
       </Typography>
-      <Grid container spacing={2}>
+      <Grid container spacing={{ xs: 1.5, md: 2 }}>
         <Grid size={{ xs: 12 }}>
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', md: 'center' }} justifyContent="space-between">
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar sx={{ bgcolor: 'secondary.main' }}>{String(name || 'U').slice(0,1).toUpperCase()}</Avatar>
+            <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar sx={{ bgcolor: 'secondary.main', width: { xs: 40, md: 56 }, height: { xs: 40, md: 56 }, fontSize: { xs: 18, md: 24 } }}>{String(name || 'U').slice(0,1).toUpperCase()}</Avatar>
                 <Stack spacing={0}>
-                  <Typography variant="subtitle1" fontWeight={700}>{name}</Typography>
-                  <Typography variant="body2" color="text.secondary">{email}</Typography>
+                  <Typography variant={isMobile ? 'body1' : 'subtitle1'} fontWeight={700}>{name}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: 12, md: 14 } }}>{email}</Typography>
                   <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
                     <Chip size="small" color={roleColor as any} label={`${t('role_label')}: ${roleLabel}`} />
                     {membership && (

@@ -8,7 +8,7 @@ import { generateEmailVerificationArtifacts, normalizeLocale } from '@/server/au
 import { sendEmailVerificationEmail } from '@/server/mail/mailer';
 import { createNotification } from '@/server/notifications/service';
 
-export async function listUsers(opts: { q?: string; page?: number; pageSize?: number; role?: string; status?: string; limit?: number }) {
+export async function listUsers(opts: { q?: string; page?: number; pageSize?: number; role?: string; status?: string; active?: boolean; limit?: number }) {
   const page = Math.max(1, opts.page || 1);
   const pageSize = Math.min(100, Math.max(1, opts.limit || opts.pageSize || 10));
   const query: any = {};
@@ -27,6 +27,7 @@ export async function listUsers(opts: { q?: string; page?: number; pageSize?: nu
   }
   if (opts.role) query.role = opts.role;
   if (opts.status) query.membership_status = opts.status;
+  if (typeof opts.active === 'boolean') query.is_active = opts.active;
 
   const [items, total] = await Promise.all([
     User.find(query).sort({ createdAt: -1 }).skip((page - 1) * pageSize).limit(pageSize).lean(),
@@ -45,6 +46,7 @@ export async function listUsers(opts: { q?: string; page?: number; pageSize?: nu
     major: u.major,
     degree: u.degree,
     sub_disciplines: u.sub_disciplines,
+    is_active: u.is_active,
     membership_status: u.membership_status,
     createdAt: u.createdAt,
   }));
@@ -104,6 +106,7 @@ export async function updateUser(id: string, input: UpdateUserInput) {
     if ((input as any).bio !== undefined) doc.bio = (input as any).bio;
     if ((input as any).profile_picture !== undefined) doc.profile_picture = (input as any).profile_picture;
     if ((input as any).permissions !== undefined) doc.permissions = (input as any).permissions;
+    if ((input as any).is_active !== undefined) doc.is_active = (input as any).is_active;
 
     let verificationToken: string | null = null;
     if (input.email !== undefined) {

@@ -7,6 +7,7 @@ import { AppError } from '@/server/errors';
 import { callAI } from '@/server/ai/providers';
 import { incrWithTtl } from '@/lib/redis';
 import { getFeatures } from '@/server/settings/service';
+import { moderateText } from '@/server/ai/moderation';
 
 type LimitRole = 'user'|'member'|'professor'|'admin'|'volunteer'|'executive';
 const ROLE_LIMITS: Record<LimitRole, number> = {
@@ -66,6 +67,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (isInappropriate(text)) throw new AppError('Inappropriate content', 422);
     if (!text) throw new AppError('Empty message', 400);
     if (text.length > 8000) throw new AppError('Message too long', 413);
+    try {
+      const mod = await moderateText(text, 'en');
+      if (!mod.allowed) throw new AppError('Inappropriate content', 422);
+    } catch {}
     const daily = await takeDaily(token.sub, token.role);
     if (!daily.ok) return NextResponse.json({ error: 'Too Many Requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     const userMsg = await ChatMessage.create({ sessionId: id, userId: token.sub, role: 'user', content: text });

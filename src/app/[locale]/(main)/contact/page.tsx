@@ -11,12 +11,34 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import type { Metadata } from 'next';
 import { buildListMetadata } from '@/lib/metadata';
 
+function toSafeMapUrl(raw?: string | null): string | null {
+  if (!raw) return null;
+  try {
+    const url = new URL(String(raw));
+    const isHttps = url.protocol === 'https:';
+    const host = url.hostname.toLowerCase();
+    const allowedHosts = [
+      'www.google.com',
+      'maps.google.com',
+      'www.google.com.pe',
+      'www.google.com.tr'
+    ];
+    if (!isHttps) return null;
+    if (!allowedHosts.some((h) => host === h || host.endsWith('.' + h))) return null;
+    if (!url.pathname.startsWith('/maps')) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 export default async function ContactPage({ params }: { params: Promise<{ locale: 'en' | 'fa' }> }) {
   const { locale } = await params;
   // Ensure DB connection is established before querying
   await mongooseConn;
   const page = await StaticPage.findOne({ key: 'contact', locale }).lean();
   const contact = (page?.contact || {}) as any;
+  const mapUrl = toSafeMapUrl(contact.mapEmbedUrl);
   const dict = locale === 'fa' ? (await import('@/locales/fa/common.json')).default : (await import('@/locales/en/common.json')).default;
   return (
     <Container sx={{ py: 6 }}>
@@ -105,9 +127,9 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
               </Stack>
             </Paper>
 
-            {contact.mapEmbedUrl && (
+            {mapUrl && (
               <Paper variant="outlined" sx={{ p: 1, borderRadius: 3 }}>
-                <Box component="iframe" title="map" src={contact.mapEmbedUrl}
+                <Box component="iframe" title="map" src={mapUrl}
                   sx={{ width: '100%', height: 300, border: 0, borderRadius: 2 }}
                   loading="lazy" allowFullScreen />
               </Paper>

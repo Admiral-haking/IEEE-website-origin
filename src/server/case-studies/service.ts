@@ -2,6 +2,7 @@ import '@/lib/mongoose';
 import CaseStudy from '@/models/CaseStudy';
 import { AppError } from '@/server/errors';
 import { CreateCaseInput, UpdateCaseInput } from './validators';
+import { sanitizeRichText } from '@/server/html/sanitize';
 
 export async function listCases(opts: { q?: string; page?: number; pageSize?: number; locale?: 'en'|'fa' }) {
   const page = Math.max(1, opts.page || 1);
@@ -9,10 +10,12 @@ export async function listCases(opts: { q?: string; page?: number; pageSize?: nu
   const query: any = {};
   if (opts.locale) query.locale = opts.locale;
   if (opts.q) {
+    const { escapeRegex } = await import('@/lib/regex');
+    const safe = escapeRegex(opts.q);
     query.$or = [
-      { title: { $regex: opts.q, $options: 'i' } },
-      { summary: { $regex: opts.q, $options: 'i' } },
-      { client: { $regex: opts.q, $options: 'i' } }
+      { title: { $regex: safe, $options: 'i' } },
+      { summary: { $regex: safe, $options: 'i' } },
+      { client: { $regex: safe, $options: 'i' } }
     ];
   }
   const [items, total] = await Promise.all([
@@ -26,7 +29,11 @@ export async function listCases(opts: { q?: string; page?: number; pageSize?: nu
 export async function createCase(input: CreateCaseInput) {
   const exists = await CaseStudy.findOne({ slug: input.slug }).lean();
   if (exists) throw new AppError('Slug already exists', 409);
-  const created = await CaseStudy.create({ ...input, date: input.date ? new Date(input.date) : undefined });
+  const created = await CaseStudy.create({
+    ...input,
+    contentHtml: sanitizeRichText(input.contentHtml),
+    date: input.date ? new Date(input.date) : undefined,
+  });
   return { id: String(created._id), title: created.title, slug: created.slug, published: created.published };
 }
 
@@ -35,7 +42,15 @@ export async function updateCase(id: string, input: UpdateCaseInput) {
     const dup = await CaseStudy.findOne({ slug: input.slug, _id: { $ne: id } }).lean();
     if (dup) throw new AppError('Slug already exists', 409);
   }
-  const updated = await CaseStudy.findByIdAndUpdate(id, { $set: { ...input, date: input.date ? new Date(input.date) : undefined } }, { new: true }).lean();
+  const patch: UpdateCaseInput = { ...input };
+  if (patch.contentHtml !== undefined) {
+    patch.contentHtml = sanitizeRichText(patch.contentHtml);
+  }
+  const updated = await CaseStudy.findByIdAndUpdate(
+    id,
+    { $set: { ...patch, date: patch.date ? new Date(patch.date) : undefined } },
+    { new: true }
+  ).lean();
   if (!updated) throw new AppError('Case not found', 404);
   return { id: String(updated._id), title: updated.title, slug: updated.slug, published: updated.published };
 }

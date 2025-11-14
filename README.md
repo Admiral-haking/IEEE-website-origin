@@ -138,7 +138,7 @@ npm install
 # Configure environment (edit .env.local)
 # - MONGODB_URI=mongodb://...
 # - JWT_SECRET=replace-with-a-long-random-string
-# - NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+# - NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api
 ```
 
 ## Develop

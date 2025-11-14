@@ -437,7 +437,10 @@ class App {
 }
 
 const Hyperspeed: FC<HyperspeedProps> = ({ effectOptions = {} }) => {
-  const mergedOptions: HyperspeedOptions = { ...defaultOptions, ...effectOptions };
+  const mergedOptions: HyperspeedOptions = React.useMemo(
+    () => ({ ...defaultOptions, ...effectOptions }),
+    [effectOptions]
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<App | null>(null);
   useEffect(() => {

@@ -86,6 +86,7 @@ export const UpdateUserSchema = z.object({
       })
     )
     .optional(),
+  is_active: z.boolean().optional(),
   profile_picture: z.string().min(1).optional(),
   permissions: z.record(z.any()).optional(),
   locale: z.enum(['en','fa']).optional(),

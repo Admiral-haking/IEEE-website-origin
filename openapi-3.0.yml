@@ -1,0 +1,22 @@
+openapi: '3.0.3'
+info:
+  title: IEEE Website API (partial)
+  version: '1.0'
+servers:
+  - url: https://example.com/api
+    description: Production API base (replace with NEXT_PUBLIC_SITE_URL + /api)
+  - url: http://localhost:3000/api
+    description: Local development
+paths:
+  /health:
+    get:
+      summary: Lightweight health check
+      responses:
+        '200':
+          description: Service is healthy
+  /db-ping:
+    get:
+      summary: Admin-only database health and ping
+      responses:
+        '200':
+          description: DB status details

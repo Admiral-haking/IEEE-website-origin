@@ -2,6 +2,7 @@ import '@/lib/mongoose';
 import Capability from '@/models/Capability';
 import { AppError } from '@/server/errors';
 import { CreateCapabilityInput, UpdateCapabilityInput } from './validators';
+import { sanitizeRichText } from '@/server/html/sanitize';
 
 export async function listCapabilities(opts: { q?: string; page?: number; pageSize?: number; locale?: 'en'|'fa'; area?: string }) {
   const page = Math.max(1, opts.page || 1);
@@ -25,12 +26,19 @@ export async function listCapabilities(opts: { q?: string; page?: number; pageSi
 }
 
 export async function createCapability(input: CreateCapabilityInput) {
-  const created = await Capability.create(input);
+  const created = await Capability.create({
+    ...input,
+    contentHtml: sanitizeRichText(input.contentHtml),
+  });
   return toDto(created.toObject());
 }
 
 export async function updateCapability(id: string, input: UpdateCapabilityInput) {
-  const updated = await Capability.findByIdAndUpdate(id, { $set: input }, { new: true }).lean();
+  const patch: UpdateCapabilityInput = { ...input };
+  if (patch.contentHtml !== undefined) {
+    patch.contentHtml = sanitizeRichText(patch.contentHtml);
+  }
+  const updated = await Capability.findByIdAndUpdate(id, { $set: patch }, { new: true }).lean();
   if (!updated) throw new AppError('Capability not found', 404);
   return toDto(updated);
 }

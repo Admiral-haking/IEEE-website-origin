@@ -55,7 +55,8 @@
     "three": "^0.170.0",
     "postprocessing": "^6.36.3",
     "web-vitals": "^4.2.4",
-    "zod": "3.23.8"
+    "zod": "3.23.8",
+    "sanitize-html": "^2.13.0"
   },
   "devDependencies": {
         "@types/bcryptjs": "^2.4.6",

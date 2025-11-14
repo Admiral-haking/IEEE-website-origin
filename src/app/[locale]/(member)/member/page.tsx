@@ -30,7 +30,7 @@ export default function MemberDashboardPage() {
   React.useEffect(() => {
     if (!me?.user) return;
     void execNotif().catch(() => {});
-  }, [!!me?.user, execNotif]);
+  }, [me?.user, execNotif]);
 
   const completionPercent = React.useMemo(() => {
     const u = (me?.user || {}) as any;

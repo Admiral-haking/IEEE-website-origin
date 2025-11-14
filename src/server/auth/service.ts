@@ -43,9 +43,13 @@ export async function registerUser(input: RegisterInput) {
   const exists = await User.findOne({ $or: [ { email }, ...(username ? [{ username }] : []), ...(phone ? [{ phone }] : []), ...(student_id ? [{ student_id }] : []) ] }).lean();
   if (exists) throw new AppError('Email, username, phone or student id already registered', 409);
   const passwordHash = await hashPassword(input.password);
-  // If first user, grant admin role; otherwise volunteer
-  const count = await User.countDocuments();
-  const role: 'admin' | 'volunteer' = count === 0 ? 'admin' : 'volunteer';
+  // If explicitly allowed via env, first user can be admin; otherwise everyone signs up as volunteer.
+  const allowFirstAdmin = (process.env.ALLOW_FIRST_ADMIN_SIGNUP || '').toLowerCase() === 'true';
+  let role: 'admin' | 'volunteer' = 'volunteer';
+  if (allowFirstAdmin) {
+    const count = await User.countDocuments();
+    role = count === 0 ? 'admin' : 'volunteer';
+  }
   const needsVerification = role !== 'admin';
   let verificationToken: string | null = null;
   let verificationHash: string | undefined;

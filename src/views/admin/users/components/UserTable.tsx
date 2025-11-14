@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import useAxios from 'axios-hooks';
 import {
   Alert,
   Box,
@@ -20,27 +19,31 @@ import {
   Typography,
 } from '@mui/material';
 import { Button } from '@mui/material';
+import useAxios from 'axios-hooks';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { Checkbox, FormControlLabel, Popover } from '@mui/material';
+import { Checkbox, FormControlLabel, Popover, Switch } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTranslation } from 'react-i18next';
 import { usePathname } from 'next/navigation';
 
-export type UserRow = { id: string; name?: string; email: string; username?: string; role: 'member'|'volunteer'|'executive'|'admin'|'user'|'professor'; phone?: string; university?: string; major?: string; degree?: string; sub_disciplines?: string[]; membership_status?: string; createdAt?: string };
+export type UserRow = { id: string; name?: string; email: string; username?: string; role: 'member'|'volunteer'|'executive'|'admin'|'user'|'professor'; phone?: string; university?: string; major?: string; degree?: string; sub_disciplines?: string[]; membership_status?: string; is_active?: boolean; createdAt?: string };
 
-export default function UserTable({ onEdit, onDelete, filters, refresh = 0 }: { onEdit: (u: UserRow) => void; onDelete: (u: UserRow) => void; filters?: { q?: string; role?: string; status?: string }; refresh?: number }) {
+export default function UserTable({ onEdit, onDelete, filters, refresh = 0 }: { onEdit: (u: UserRow) => void; onDelete: (u: UserRow) => void; filters?: { q?: string; role?: string; status?: string; active?: string }; refresh?: number }) {
   const { t } = useTranslation();
+  const isMobile = useMediaQuery('(max-width:600px)');
   const pathname = usePathname();
   const parts = (pathname || '/').split('/').filter(Boolean);
   const locale = parts[0] === 'en' || parts[0] === 'fa' ? (parts[0] as 'en'|'fa') : 'en';
   const [q, setQ] = React.useState(filters?.q || '');
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [rowsPerPage, setRowsPerPage] = React.useState(() => (isMobile ? 5 : 10));
   React.useEffect(() => { setQ(filters?.q || ''); setPage(0); }, [filters?.q]);
   const params: any = { q, page: page + 1, pageSize: rowsPerPage };
   if (filters?.role) params.role = filters.role;
   if (filters?.status) params.status = filters.status;
+  if (filters?.active) params.active = filters.active;
   params._r = refresh; // bust cache
   const [{ data, loading, error }, refetch] = useAxios({ url: '/api/users', params });
   const onExport = () => {
@@ -75,6 +78,7 @@ export default function UserTable({ onEdit, onDelete, filters, refresh = 0 }: { 
     degree: true,
     sub_disciplines: true,
     status: true,
+    active: true,
   });
   React.useEffect(() => {
     try { const raw = localStorage.getItem('userTableCols'); if (raw) setCols({ ...cols, ...JSON.parse(raw) }); } catch {}
@@ -124,7 +128,7 @@ export default function UserTable({ onEdit, onDelete, filters, refresh = 0 }: { 
               {cols.major && <TableCell>{t('major')}</TableCell>}
               {cols.degree && <TableCell>{t('degree')}</TableCell>}
               {cols.sub_disciplines && <TableCell>{t('sub_disciplines') as any || 'Sub-disciplines'}</TableCell>}
-              
+              {cols.active && <TableCell>{t('active') as any || 'Active'}</TableCell>}
               {cols.status && <TableCell>{t('status')}</TableCell>}
               <TableCell align="right">{t('actions')}</TableCell>
             </TableRow>
@@ -169,7 +173,27 @@ export default function UserTable({ onEdit, onDelete, filters, refresh = 0 }: { 
                     )
                     : '—'}
                 </TableCell>}
-                
+                {cols.active && (
+                  <TableCell>
+                    <Switch
+                      size="small"
+                      checked={u.is_active !== false}
+                      onChange={async (e) => {
+                        try {
+                          const next = e.target.checked;
+                          await fetch(`/api/users/${u.id}/active`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ is_active: next }),
+                          });
+                          await refetch();
+                        } catch {
+                          // ignore UI error; server-side auth will enforce access
+                        }
+                      }}
+                    />
+                  </TableCell>
+                )}
                 {cols.status && <TableCell>{u.membership_status || '—'}</TableCell>}
                 <TableCell align="right">
                   <Stack direction="row" spacing={0.5} justifyContent="flex-end">

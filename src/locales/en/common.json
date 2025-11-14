@@ -510,5 +510,7 @@
     "settings_ui_hyperspeed_hint": "3D hero background effect",
     "settings_ui_hyperspeed_length": "Length",
     "settings_ui_hyperspeed_road": "Road width",
-    "settings_ui_hyperspeed_island": "Island width"
+    "settings_ui_hyperspeed_island": "Island width",
+    "settings_ui_team": "Team visuals",
+    "settings_ui_team_group_order": "Group order (comma separated)"
 }

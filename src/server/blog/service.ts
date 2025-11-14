@@ -3,6 +3,7 @@ import BlogPost from '@/models/BlogPost';
 import { AppError } from '@/server/errors';
 import { CreatePostInput, UpdatePostInput } from './validators';
 import { notifyUsersNewBlogPost } from '@/server/notifications/service';
+import { sanitizeRichText } from '@/server/html/sanitize';
 
 export async function listPosts(opts: { q?: string; page?: number; pageSize?: number; locale?: 'en'|'fa' }) {
   const page = Math.max(1, opts.page || 1);
@@ -29,7 +30,10 @@ export async function listPosts(opts: { q?: string; page?: number; pageSize?: nu
 export async function createPost(input: CreatePostInput) {
   const exists = await BlogPost.findOne({ slug: input.slug }).lean();
   if (exists) throw new AppError('Slug already exists', 409);
-  const created = await BlogPost.create(input);
+  const created = await BlogPost.create({
+    ...input,
+    contentHtml: sanitizeRichText(input.contentHtml),
+  });
   if (created.published) {
     notifyUsersNewBlogPost({ id: String(created._id), title: created.title }).catch((err) => {
       console.error('[notifications] Failed to broadcast blog post', err);
@@ -45,7 +49,11 @@ export async function updatePost(id: string, input: UpdatePostInput) {
     const dup = await BlogPost.findOne({ slug: input.slug, _id: { $ne: id } }).lean();
     if (dup) throw new AppError('Slug already exists', 409);
   }
-  const updated = await BlogPost.findByIdAndUpdate(id, { $set: input }, { new: true }).lean();
+  const patch: UpdatePostInput = { ...input };
+  if (patch.contentHtml !== undefined) {
+    patch.contentHtml = sanitizeRichText(patch.contentHtml);
+  }
+  const updated = await BlogPost.findByIdAndUpdate(id, { $set: patch }, { new: true }).lean();
   if (!updated) throw new AppError('Post not found', 404);
   if (input.published === true && !prev.published && updated.published) {
     notifyUsersNewBlogPost({ id: String(updated._id), title: updated.title }).catch((err) => {

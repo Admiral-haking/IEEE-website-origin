@@ -67,18 +67,61 @@ const nextConfig = {
 export default nextConfig;
 
 function csp({ dev } = { dev: false }) {
-  const ws = dev ? ' ws: wss:' : '';
-  const unsafeEval = dev ? " 'unsafe-eval'" : '';
-  return [
-    "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${unsafeEval}`,
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data:",
-    `connect-src 'self'${ws} http: https:`,
-    "media-src 'self'",
-    "frame-ancestors 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-  ].join('; ');
+  const level = process.env.CSP_LEVEL || (dev ? 'dev' : 'standard');
+
+  const connectOrigins = new Set();
+  const addOrigin = (value) => {
+    if (!value) return;
+    try {
+      const u = new URL(value);
+      connectOrigins.add(u.origin);
+    } catch {
+      // Ignore invalid URLs
+    }
+  };
+
+  addOrigin(process.env.NEXT_PUBLIC_API_BASE_URL);
+  addOrigin(process.env.NEXT_PUBLIC_SITE_URL);
+  addOrigin(process.env.OPENAI_BASE_URL);
+  addOrigin(process.env.DEEPSEEK_BASE_URL);
+
+  const scriptSrc = ["'self'"];
+  const allowInlineScripts = level !== 'strict';
+  const allowEval = dev && level === 'dev';
+  if (allowInlineScripts) scriptSrc.push("'unsafe-inline'");
+  if (allowEval) scriptSrc.push("'unsafe-eval'");
+
+  const styleSrc = ["'self'", "'unsafe-inline'"];
+
+  const imgSrc = ["'self'", "data:", "blob:", "https:"];
+  const fontSrc = ["'self'", "data:"];
+
+  const connectSrc = new Set();
+  connectSrc.add("'self'");
+  if (dev) {
+    connectSrc.add("http:");
+    connectSrc.add("https:");
+    connectSrc.add("ws:");
+    connectSrc.add("wss:");
+  } else {
+    connectSrc.add("https:");
+  }
+  for (const origin of connectOrigins) connectSrc.add(origin);
+
+  const directives = {
+    'default-src': ["'self'"],
+    'script-src': scriptSrc,
+    'style-src': styleSrc,
+    'img-src': imgSrc,
+    'font-src': fontSrc,
+    'connect-src': Array.from(connectSrc),
+    'media-src': ["'self'"],
+    'frame-ancestors': ["'none'"],
+    'base-uri': ["'self'"],
+    'form-action': ["'self'"],
+  };
+
+  return Object.entries(directives)
+    .map(([name, values]) => `${name} ${Array.from(new Set(values.filter(Boolean))).join(' ')}`)
+    .join('; ');
 }

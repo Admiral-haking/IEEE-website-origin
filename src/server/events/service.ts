@@ -2,6 +2,7 @@ import '@/lib/mongoose';
 import Event from '@/models/Event';
 import { AppError } from '@/server/errors';
 import { CreateEventInput, UpdateEventInput } from './validators';
+import { sanitizeRichText } from '@/server/html/sanitize';
 
 export async function listEvents(opts: { q?: string; page?: number; pageSize?: number; locale?: 'en'|'fa' }) {
   const page = Math.max(1, opts.page || 1);
@@ -27,7 +28,10 @@ export async function listEvents(opts: { q?: string; page?: number; pageSize?: n
 export async function createEvent(input: CreateEventInput) {
   const exists = await Event.findOne({ slug: input.slug, locale: input.locale }).lean();
   if (exists) throw new AppError('Slug already exists', 409);
-  const created = await Event.create(input);
+  const created = await Event.create({
+    ...input,
+    descriptionHtml: sanitizeRichText(input.descriptionHtml),
+  });
   return { id: String(created._id), title: created.title, slug: created.slug, published: created.published };
 }
 
@@ -36,7 +40,11 @@ export async function updateEvent(id: string, input: UpdateEventInput) {
     const dup = await Event.findOne({ slug: input.slug, _id: { $ne: id } }).lean();
     if (dup) throw new AppError('Slug already exists', 409);
   }
-  const updated = await Event.findByIdAndUpdate(id, { $set: input }, { new: true }).lean();
+  const patch: UpdateEventInput = { ...input };
+  if (patch.descriptionHtml !== undefined) {
+    patch.descriptionHtml = sanitizeRichText(patch.descriptionHtml);
+  }
+  const updated = await Event.findByIdAndUpdate(id, { $set: patch }, { new: true }).lean();
   if (!updated) throw new AppError('Event not found', 404);
   return { id: String(updated._id), title: updated.title, slug: updated.slug, published: updated.published };
 }
@@ -46,4 +54,3 @@ export async function deleteEvent(id: string) {
   if (!res) throw new AppError('Event not found', 404);
   return { ok: true };
 }
-
