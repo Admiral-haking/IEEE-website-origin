@@ -14,6 +14,7 @@ type Features = {
   chatEnabled: boolean;
   notificationsEmailEnabled: boolean;
   contact: { captchaProvider: 'none'|'turnstile'|'hcaptcha' };
+  security?: { strictForeignIp?: boolean };
   ai?: { enabled: boolean; provider?: 'openai'|'deepseek'|'other'|'none'; defaultModels?: { openai?: string; deepseek?: string } };
   auth: {
     emailPasswordEnabled: boolean;
@@ -222,6 +223,21 @@ export default function SettingsClient() {
                 {features?.contact?.captchaProvider === 'turnstile' && env.turnstileSecret && !env.turnstileSite && (t('settings_hint_turnstile_site_missing') || 'Client widget requires NEXT_PUBLIC_TURNSTILE_SITE_KEY.')}
               </FormHelperText>
             </FormControl>
+          </Box>
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>{t('settings_section_security') || 'Security'}</Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={!!features?.security?.strictForeignIp}
+                  onChange={(e) => update({ security: { strictForeignIp: e.target.checked } as any })}
+                />
+              }
+              label={t('settings_security_strict_foreign_ip') || 'Tighten limits for foreign/VPN IPs'}
+            />
+            <FormHelperText>
+              {t('settings_security_strict_foreign_ip_hint') || 'Uses IP country headers (e.g. cf-ipcountry) to apply stricter rate limits and captcha for non-local visitors.'}
+            </FormHelperText>
           </Box>
           <Box>
             <Typography variant="subtitle2" gutterBottom>{t('settings_section_ai') || 'AI'}</Typography>

@@ -7,6 +7,9 @@ type Features = {
   chatEnabled: boolean;
   notificationsEmailEnabled: boolean;
   contact: { captchaProvider: 'none'|'turnstile'|'hcaptcha' };
+  security?: {
+    strictForeignIp?: boolean;
+  };
   ai?: { enabled: boolean; provider?: 'openai'|'deepseek'|'other'|'none'; defaultModels?: { openai?: string; deepseek?: string } };
   auth: {
     emailPasswordEnabled: boolean;
@@ -51,6 +54,7 @@ function defaultFeatures(): Features {
     : (process.env.HCAPTCHA_SECRET ? 'hcaptcha' : 'none');
   const aiProvider = process.env.OPENAI_API_KEY ? 'openai' : (process.env.DEEPSEEK_API_KEY ? 'deepseek' : 'none');
   const smsAvailable = !!((process.env.SMS_API_URL || process.env.SHAPARAK_SMS_URL) && (process.env.SMS_API_KEY || process.env.SHAPARAK_SMS_KEY));
+  const strictForeignIp = isOn(process.env.SEC_STRICT_FOREIGN_IP);
   return {
     assistEnabled: isOn(process.env.NEXT_PUBLIC_ENABLE_ASSIST) && !isOff(process.env.NEXT_PUBLIC_ENABLE_ASSIST),
     vitalsClientEnabled: !isOff(process.env.NEXT_PUBLIC_ENABLE_VITALS) /* default true */,
@@ -58,6 +62,7 @@ function defaultFeatures(): Features {
     chatEnabled: !(process.env.CHAT_DISABLED === '1' || process.env.CHAT_DISABLED === 'true'),
     notificationsEmailEnabled: !(process.env.NOTIFICATIONS_EMAIL_ENABLED === '0' || process.env.NOTIFICATIONS_EMAIL_ENABLED === 'false'),
     contact: { captchaProvider: captcha },
+    security: { strictForeignIp },
     ai: { enabled: aiProvider !== 'none', provider: aiProvider as any, defaultModels: { openai: 'gpt-4o-mini', deepseek: 'deepseek-chat' } },
     auth: {
       emailPasswordEnabled: true,

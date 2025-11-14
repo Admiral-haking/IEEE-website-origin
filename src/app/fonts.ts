@@ -1,13 +1,12 @@
-import { Inter, Vazirmatn } from 'next/font/google';
+// Local font wiring without external fetch.
+// We expose simple `variable` class names that set CSS variables
+// defined in `globals.css`. This avoids `next/font` network fetches
+// during production builds (useful in restricted environments).
 
-export const latin = Inter({
-  subsets: ['latin'],
-  variable: '--font-latin',
-  display: 'swap'
-});
+export const latin = {
+  variable: 'font-latin',
+};
 
-export const fa = Vazirmatn({
-  subsets: ['arabic'],
-  variable: '--font-fa',
-  display: 'swap'
-});
+export const fa = {
+  variable: 'font-fa',
+};

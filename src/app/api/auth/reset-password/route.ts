@@ -4,6 +4,7 @@ import { resetPassword } from '@/server/auth/service';
 import { AppError } from '@/server/errors';
 import { incrWithTtl } from '@/lib/redis';
 import { getFeatures } from '@/server/settings/service';
+import { getClientIp, isForeignIp, checkStrictForeignRate } from '@/server/security/ip';
 
 const RATE_WINDOW_SEC = Number(process.env.PASSWORD_RESET_WINDOW_SEC || 5 * 60);
 const RATE_LIMIT = Number(process.env.PASSWORD_RESET_LIMIT || 10);
@@ -29,9 +30,18 @@ export async function POST(req: NextRequest) {
     if (!features.auth.passwordResetEnabled) {
       return NextResponse.json({ error: 'Password reset disabled' }, { status: 503 });
     }
-    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const ip = getClientIp(req);
     const json = await req.json();
     const input = ResetPasswordSchema.parse(json);
+    if (features.security?.strictForeignIp && isForeignIp(req)) {
+      const ticket = await checkStrictForeignRate(ip, 'reset');
+      if (!ticket.ok) {
+        return NextResponse.json(
+          { error: 'Too Many Requests' },
+          { status: 429, headers: { 'Retry-After': String(ticket.retryAfter || 60) } }
+        );
+      }
+    }
     const rate = await checkRate(ip);
     if (!rate.ok) {
       return NextResponse.json({ error: 'Too Many Requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfter || 60) } });

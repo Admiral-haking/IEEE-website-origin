@@ -5,6 +5,7 @@ import { AppError } from '@/server/errors';
 import { AuthCookie } from '@/server/auth/jwt';
 import { incrWithTtl } from '@/lib/redis';
 import { getFeatures } from '@/server/settings/service';
+import { getClientIp, isForeignIp, checkStrictForeignRate } from '@/server/security/ip';
 
 const RATE_REG_WINDOW_SEC = Number(process.env.AUTH_REGISTER_WINDOW_SEC || (process.env.NODE_ENV === 'production' ? 60 * 60 : 5 * 60));
 const RATE_REG_LIMIT_IP = Number(process.env.AUTH_REGISTER_LIMIT_IP || (process.env.NODE_ENV === 'production' ? 3 : 20));
@@ -31,9 +32,18 @@ export async function POST(req: NextRequest) {
     if (!features.auth.signupEnabled) {
       return NextResponse.json({ error: 'Sign up disabled' }, { status: 503 });
     }
-    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const ip = getClientIp(req);
     const json = await req.json();
     const input = RegisterSchema.parse(json);
+    if (features.security?.strictForeignIp && isForeignIp(req)) {
+      const ticket = await checkStrictForeignRate(ip, 'register');
+      if (!ticket.ok) {
+        return NextResponse.json(
+          { error: 'Too Many Requests' },
+          { status: 429, headers: { 'Retry-After': String(ticket.retryAfter || 60) } }
+        );
+      }
+    }
     const rate = await checkRate(ip);
     if (!rate.ok) return NextResponse.json({ error: 'Too Many Requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfter || 60) } });
     const result = await registerUser(input);

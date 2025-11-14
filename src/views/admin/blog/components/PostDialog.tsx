@@ -30,7 +30,19 @@ export default function PostDialog({ open, onClose, initial, onSubmit }: {
     resolver: zodResolver(Schema),
     defaultValues: { title: '', slug: '', excerpt: '', contentHtml: '', coverFileId: '', tags: '', published: false }
   });
-  React.useEffect(() => { reset({ title: initial?.title || '', slug: initial?.slug || '', excerpt: (initial as any)?.excerpt || '', contentHtml: (initial as any)?.contentHtml || '', tags: Array.isArray((initial as any)?.tags) ? ((initial as any).tags as string[]).join(', ') : ((initial as any)?.tags || ''), published: !!(initial as any)?.published }); }, [initial, reset]);
+  React.useEffect(() => {
+    reset({
+      title: initial?.title || '',
+      slug: initial?.slug || '',
+      excerpt: (initial as any)?.excerpt || '',
+      contentHtml: (initial as any)?.contentHtml || '',
+      coverFileId: (initial as any)?.coverFileId || '',
+      tags: Array.isArray((initial as any)?.tags)
+        ? ((initial as any).tags as string[]).join(', ')
+        : ((initial as any)?.tags || ''),
+      published: !!(initial as any)?.published
+    });
+  }, [initial, reset]);
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const coverId = watch('coverFileId');
   const coverSrc = coverId ? `/api/media/${coverId}` : '';

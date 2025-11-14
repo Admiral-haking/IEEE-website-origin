@@ -160,6 +160,10 @@ ship() {
     warn "SKIP_BUILD=1 set — skipping build, using existing deployment-package.zip"
   fi
   deploy_combo
+  # Telegram webhook is now opt-in; enable by setting TELEGRAM_WEBHOOK_ENABLED=1
+  if [[ "${TELEGRAM_WEBHOOK_ENABLED:-}" == "1" ]]; then
+    telegram_webhook
+  fi
 }
 
 env_push() {
@@ -177,6 +181,35 @@ env_push() {
   log "♻️  Restarting PM2 app ${PM2_APP_NAME}"
   eval $(with_sshpass) ssh ${ssh_opts} "${SSH_USER}@${SSH_HOST}" "pm2 restart '${PM2_APP_NAME}' || pm2 start npm --name '${PM2_APP_NAME}' -- start"
   log "✅ Env updated and app restarted"
+}
+
+telegram_webhook() {
+  # Configure Telegram webhook after a successful deploy (optional).
+  # Requires: TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, and either
+  # TELEGRAM_WEBHOOK_URL or SITE_URL to be set in .deploy.env or env.
+  if [[ -z "${TELEGRAM_BOT_TOKEN:-}" || -z "${TELEGRAM_WEBHOOK_SECRET:-}" ]]; then
+    return 0
+  fi
+
+  local webhook_url="${TELEGRAM_WEBHOOK_URL:-}"
+  if [[ -z "$webhook_url" ]]; then
+    local base="${SITE_URL:-}"
+    if [[ -z "$base" ]]; then
+      warn "Telegram webhook skipped: SITE_URL or TELEGRAM_WEBHOOK_URL not set"
+      return 0
+    fi
+    base="${base%/}"
+    webhook_url="${base}/api/telegram/webhook?secret=${TELEGRAM_WEBHOOK_SECRET}"
+  fi
+
+  log "🤖 Updating Telegram webhook..."
+  if ! curl -fsS "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
+    -d "url=${webhook_url}" \
+    -d "secret_token=${TELEGRAM_WEBHOOK_SECRET}" >/dev/null 2>&1; then
+    warn "Telegram setWebhook failed. Check TELEGRAM_BOT_TOKEN / SITE_URL / TELEGRAM_WEBHOOK_SECRET"
+    return 0
+  fi
+  log "✅ Telegram webhook configured"
 }
 
 status() {
@@ -223,4 +256,3 @@ case "$cmd" in
   ""|help|-h|--help) usage ;;
   *) err "Unknown command: $cmd"; echo; usage; exit 1 ;;
 esac
-

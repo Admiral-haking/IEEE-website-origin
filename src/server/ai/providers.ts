@@ -1,6 +1,39 @@
 export type ProviderName = 'openai'|'deepseek';
 
+let aiEnvLoaded = false;
+
+function ensureAIEnvLoaded() {
+  if (aiEnvLoaded) return;
+  aiEnvLoaded = true;
+  try {
+    // Lazy-load .env.local at runtime (useful in pm2/prod where env vars are not injected)
+    // eslint-disable-next-line global-require
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line global-require
+    const path = require('path') as typeof import('path');
+    const p = path.resolve(process.cwd(), '.env.local');
+    if (fs.existsSync(p)) {
+      const text = fs.readFileSync(p, 'utf8');
+      for (const line of text.split(/\r?\n/)) {
+        const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
+        if (!m) continue;
+        const key = m[1];
+        let val = m[2];
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        if (!(key in process.env)) {
+          process.env[key] = val;
+        }
+      }
+    }
+  } catch {
+    // ignore; we fall back to process.env as-is
+  }
+}
+
 export async function callAI(opts: { provider: ProviderName; model: string; messages: Array<{ role: 'user'|'assistant'|'system'; content: string }> }) {
+  ensureAIEnvLoaded();
   if (opts.provider === 'openai') return callOpenAI(opts.model, opts.messages);
   if (opts.provider === 'deepseek') return callDeepSeek(opts.model, opts.messages);
   throw new Error('Unsupported provider');

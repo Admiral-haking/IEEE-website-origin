@@ -3,6 +3,7 @@ import { AppError } from '@/server/errors';
 import { incrWithTtl, setEx } from '@/lib/redis';
 import { sendSms, normalizeIrPhone } from '@/server/sms/service';
 import { getFeatures } from '@/server/settings/service';
+import { getClientIp, isForeignIp, checkStrictForeignRate } from '@/server/security/ip';
 
 const WINDOW_SEC = Number(process.env.OTP_WINDOW_SEC || 10 * 60);
 const LIMIT_PER_PHONE = Number(process.env.OTP_LIMIT_PER_PHONE || 5);
@@ -18,7 +19,16 @@ export async function POST(req: NextRequest) {
     }
     const { phone } = await req.json();
     if (!phone || String(phone).length < 6) throw new AppError('Invalid phone', 400);
-    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const ip = getClientIp(req);
+    if (features.security?.strictForeignIp && isForeignIp(req)) {
+      const ticket = await checkStrictForeignRate(ip, 'otp-request');
+      if (!ticket.ok) {
+        return NextResponse.json(
+          { error: 'Too Many Requests' },
+          { status: 429, headers: { 'Retry-After': String(ticket.retryAfter || 60) } }
+        );
+      }
+    }
     const p = normalizeIrPhone(String(phone));
     const keyPhone = `otp:req:phone:${p}`;
     const keyIp = `otp:req:ip:${ip}`;

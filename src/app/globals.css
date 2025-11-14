@@ -8,6 +8,27 @@ body {
   box-sizing: border-box;
 }
 
+/* Font variables (used by MUI theme). These classes are attached
+   to <html> via src/app/layout.tsx. */
+:root {
+  --font-latin: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  --font-fa: var(--font-latin);
+}
+
+.font-latin {
+  --font-latin: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
+.font-fa {
+  --font-fa: "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
 .stepperFrame {
   border: 1px solid #222;
 }

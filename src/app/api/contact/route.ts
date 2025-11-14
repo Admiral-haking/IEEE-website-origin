@@ -7,6 +7,7 @@ import { AppError } from '@/server/errors';
 import { incrWithTtl } from '@/lib/redis';
 import { moderateText } from '@/server/ai/moderation';
 import { getFeatures } from '@/server/settings/service';
+import { getClientIp, isForeignIp, checkStrictForeignRate } from '@/server/security/ip';
 
 const Schema = z.object({
   name: z.string().min(2).max(120),
@@ -52,7 +53,7 @@ async function take(ip: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const clientIp = getClientIp(req);
     const ticket = await take(clientIp);
     if (!ticket.ok) return NextResponse.json({ error: 'Too Many Requests' }, { status: 429, headers: { 'Retry-After': String(ticket.retryAfter || 60) } });
     const json = await req.json();
@@ -60,10 +61,25 @@ export async function POST(req: NextRequest) {
     // Optional captcha verification (admin-controlled)
     try {
       const f = await getFeatures();
-      if (f.contact.captchaProvider === 'turnstile' && process.env.TURNSTILE_SECRET_KEY) {
+      const strictForeign = !!f.security?.strictForeignIp && isForeignIp(req);
+      if (strictForeign) {
+        const ticketForeign = await checkStrictForeignRate(clientIp, 'contact');
+        if (!ticketForeign.ok) {
+          return NextResponse.json(
+            { error: 'Too Many Requests' },
+            { status: 429, headers: { 'Retry-After': String(ticketForeign.retryAfter || 60) } }
+          );
+        }
+      }
+      let provider = f.contact.captchaProvider;
+      if (strictForeign && provider === 'none') {
+        if (process.env.TURNSTILE_SECRET_KEY) provider = 'turnstile';
+        else if (process.env.HCAPTCHA_SECRET) provider = 'hcaptcha';
+      }
+      if (provider === 'turnstile' && process.env.TURNSTILE_SECRET_KEY) {
         const ok = await verifyTurnstile(input.turnstileToken || '', clientIp);
         if (!ok) return NextResponse.json({ error: 'Captcha verification failed' }, { status: 400 });
-      } else if (f.contact.captchaProvider === 'hcaptcha' && process.env.HCAPTCHA_SECRET) {
+      } else if (provider === 'hcaptcha' && process.env.HCAPTCHA_SECRET) {
         const ok = await verifyHcaptcha(input.hcaptchaToken || '', clientIp);
         if (!ok) return NextResponse.json({ error: 'Captcha verification failed' }, { status: 400 });
       }

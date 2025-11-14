@@ -1,4 +1,5 @@
 import sanitizeHtml from 'sanitize-html';
+import type { IOptions } from 'sanitize-html';
 
 // Central HTML sanitizer for rich-text fields (blog, pages, jobs, etc.)
 // Keeps a safe subset of tags/attributes needed for TipTap content and
@@ -17,13 +18,13 @@ const allowedTags = [
   'figcaption'
 ];
 
-const allowedAttributes: sanitizeHtml.IOptions['allowedAttributes'] = {
+const allowedAttributes: IOptions['allowedAttributes'] = {
   ...sanitizeHtml.defaults.allowedAttributes,
   a: ['href', 'name', 'target', 'rel'],
   img: ['src', 'alt', 'title', 'width', 'height'],
 };
 
-const allowedStyles: sanitizeHtml.IOptions['allowedStyles'] = {
+const allowedStyles: IOptions['allowedStyles'] = {
   '*': {
     'text-align': [/^left$/, /^right$/, /^center$/, /^justify$/],
   },

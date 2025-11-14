@@ -3,6 +3,8 @@ import { resendEmailVerification } from '@/server/auth/service';
 import { AppError } from '@/server/errors';
 import { incrWithTtl } from '@/lib/redis';
 import { z } from 'zod';
+import { getFeatures } from '@/server/settings/service';
+import { getClientIp, isForeignIp, checkStrictForeignRate } from '@/server/security/ip';
 
 const Schema = z.object({
   email: z.string().email(),
@@ -36,9 +38,19 @@ async function checkRate(ip: string, email: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const features = await getFeatures();
+    const ip = getClientIp(req);
     const json = await req.json();
     const input = Schema.parse(json);
+    if (features.security?.strictForeignIp && isForeignIp(req)) {
+      const ticket = await checkStrictForeignRate(ip, 'verify-resend');
+      if (!ticket.ok) {
+        return NextResponse.json(
+          { error: 'Too Many Requests' },
+          { status: 429, headers: { 'Retry-After': String(ticket.retryAfter || 60) } }
+        );
+      }
+    }
     const rate = await checkRate(ip, input.email.toLowerCase());
     if (!rate.ok) {
       return NextResponse.json({ error: 'Too Many Requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfter || 60) } });
