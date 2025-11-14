@@ -6,6 +6,7 @@ import ChatMessage from '@/models/ChatMessage';
 import { AppError } from '@/server/errors';
 import { callAI } from '@/server/ai/providers';
 import { incrWithTtl } from '@/lib/redis';
+import { getFeatures } from '@/server/settings/service';
 
 type LimitRole = 'user'|'member'|'professor'|'admin'|'volunteer'|'executive';
 const ROLE_LIMITS: Record<LimitRole, number> = {
@@ -35,9 +36,9 @@ async function takeDaily(userId: string, role: keyof typeof ROLE_LIMITS) {
 }
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (process.env.CHAT_DISABLED === '1' || process.env.CHAT_DISABLED === 'true') {
-    return NextResponse.json({ error: 'Chat temporarily disabled' }, { status: 503 });
-  }
+  const f = await getFeatures();
+  if (!f.chatEnabled) return NextResponse.json({ error: 'Chat temporarily disabled' }, { status: 503 });
+  if (!(f.ai && (f.ai as any).enabled)) return NextResponse.json({ error: 'AI responses disabled' }, { status: 503 });
   try {
     const token = await getTokenFromCookies();
     const { id } = await params;
@@ -52,9 +53,9 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (process.env.CHAT_DISABLED === '1' || process.env.CHAT_DISABLED === 'true') {
-    return NextResponse.json({ error: 'Chat temporarily disabled' }, { status: 503 });
-  }
+  const f = await getFeatures();
+  if (!f.chatEnabled) return NextResponse.json({ error: 'Chat temporarily disabled' }, { status: 503 });
+  if (!(f.ai && (f.ai as any).enabled)) return NextResponse.json({ error: 'AI responses disabled' }, { status: 503 });
   try {
     const token = await getTokenFromCookies();
     const { id } = await params;

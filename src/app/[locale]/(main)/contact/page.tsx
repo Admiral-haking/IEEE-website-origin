@@ -2,6 +2,7 @@ import React from 'react';
 import mongooseConn from '@/lib/mongoose';
 import StaticPage from '@/models/StaticPage';
 import { Container, Typography, Box, Stack, Link, Grid, Paper, Divider, TextField, Button, Chip } from '@mui/material';
+import AssistWidget from '@/components/AssistWidget';
 import ContactForm from '@/views/contact/ContactForm';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
@@ -114,6 +115,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
           </Stack>
         </Grid>
       </Grid>
+      <AssistWidget />
     </Container>
   );
 }

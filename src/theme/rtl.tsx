@@ -10,10 +10,12 @@ function createRtlCache() {
   return createCache({ key: 'mui-rtl', stylisPlugins: [stylisRTLPlugin] });
 }
 
-export default function RtlProvider({ children }: { children: React.ReactNode }) {
+export default function RtlProvider({ children, initialLocale }: { children: React.ReactNode; initialLocale?: 'en'|'fa' }) {
   const pathname = usePathname();
   const seg = (pathname || '/').split('/').filter(Boolean)[0];
-  const isRtl = seg === 'fa';
+  const derived = seg === 'fa' ? 'fa' : 'en';
+  const effectiveLocale = initialLocale || derived;
+  const isRtl = effectiveLocale === 'fa';
   const cache = React.useMemo(() => (isRtl ? createRtlCache() : null), [isRtl]);
 
   React.useEffect(() => {

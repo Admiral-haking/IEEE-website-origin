@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import useAxios from 'axios-hooks';
-import { Alert, Box, Button, Stack, TextField, InputAdornment, IconButton, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, TextField, InputAdornment, IconButton, Typography, Tooltip } from '@mui/material';
 import { usePathname, useRouter } from 'next/navigation';
 import useLocale from '@/hooks/useLocale';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
@@ -33,8 +33,21 @@ export default function SignupForm() {
   const theme = useTheme();
   const isRtl = theme.direction === 'rtl';
   const { t } = useTranslation();
+  const [signupEnabled, setSignupEnabled] = React.useState(true);
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/settings/public/features', { cache: 'no-store' });
+        const data = await res.json();
+        if (!active) return;
+        if (data?.auth) setSignupEnabled(!!data.auth.signupEnabled);
+      } catch {}
+    })();
+    return () => { active = false; };
+  }, []);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<Values>({
+  const { register, handleSubmit, formState: { errors, isSubmitting, touchedFields, isSubmitted }, setError } = useForm<Values>({
     resolver: zodResolver(Schema),
     mode: 'onBlur',
     reValidateMode: 'onChange',
@@ -55,6 +68,14 @@ export default function SignupForm() {
     const id = setInterval(() => setRetryAfter((s) => (s > 0 ? s - 1 : 0)), 1000);
     return () => clearInterval(id);
   }, [retryAfter]);
+
+  if (!signupEnabled) {
+    return (
+      <Box>
+        <Alert severity="warning">{(t('signup_disabled') as any) || 'Sign up is currently disabled.'}</Alert>
+      </Box>
+    );
+  }
 
   const onSubmit = async (values: Values) => {
     if (retryAfter > 0) return;
@@ -103,7 +124,7 @@ export default function SignupForm() {
     : '';
 
   return (
-    <Box sx={{ py: 3 }}>
+    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ py: 3 }}>
       <Stack gap={3}>
         <Typography variant="h5" component="h1" fontWeight={800}>{t('signup_title') || t('sign_up')}</Typography>
         {verificationPending && (
@@ -114,57 +135,78 @@ export default function SignupForm() {
         {error && (<Alert severity="error">{String(errText)}</Alert>)}
         <Box className="w-full max-w-2xl mx-auto" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
           <Box sx={{ gridColumn: { xs: '1', sm: '1 / span 2' } }}>
-            <TextField fullWidth label={t('email_label')} placeholder={t('email_placeholder') || ''} type="email" autoComplete="email"
-              {...register('email')} error={!!errors.email} helperText={errors.email?.message}
-              InputProps={{ startAdornment: (<InputAdornment position="start"><MailOutlineIcon fontSize="small" /></InputAdornment>) }}
+            <Tooltip
+              open={!!errors.email && (((touchedFields as any).email) || isSubmitted)}
+              title={((touchedFields as any).email || isSubmitted) ? (errors.email?.message || '') : ''}
+              placement="top"
+              arrow
+            >
+              <TextField fullWidth label={t('email_label')} placeholder={t('email_placeholder') || ''} type="email" autoComplete="email"
+                {...register('email')} error={!!errors.email && (!!(touchedFields as any).email || isSubmitted)} helperText={(!!errors.email && ((touchedFields as any).email || isSubmitted)) ? (errors.email?.message) : ''}
+                InputProps={{ startAdornment: (<InputAdornment position="start"><MailOutlineIcon fontSize="small" /></InputAdornment>) }}
+                InputLabelProps={labelProps}
+              />
+            </Tooltip>
+          </Box>
+          <Tooltip open={!!errors.password && (touchedFields.password || isSubmitted)} title={(touchedFields.password || isSubmitted) ? (errors.password?.message || '') : ''} placement="top" arrow>
+            <TextField fullWidth label={t('password_label')} placeholder="••••••••" type={showPassword ? 'text' : 'password'} autoComplete="new-password"
+              {...register('password')} error={!!errors.password && (touchedFields.password || isSubmitted)} helperText={(!!errors.password && (touchedFields.password || isSubmitted)) ? errors.password?.message : ''}
+              InputProps={{
+                startAdornment: (<InputAdornment position="start"><LockOutlinedIcon fontSize="small" /></InputAdornment>),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton aria-label="toggle password visibility" onClick={() => setShowPassword((v) => !v)} edge="end" size="small">
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
               InputLabelProps={labelProps}
             />
-          </Box>
-          <TextField fullWidth label={t('password_label')} placeholder="••••••••" type={showPassword ? 'text' : 'password'} autoComplete="new-password"
-            {...register('password')} error={!!errors.password} helperText={errors.password?.message}
-            InputProps={{
-              startAdornment: (<InputAdornment position="start"><LockOutlinedIcon fontSize="small" /></InputAdornment>),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton aria-label="toggle password visibility" onClick={() => setShowPassword((v) => !v)} edge="end" size="small">
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              )
-            }}
-            InputLabelProps={labelProps}
-          />
-          <TextField fullWidth label={t('confirm_password')} placeholder="••••••••" type={showPassword ? 'text' : 'password'} autoComplete="new-password"
-            {...register('confirm')} error={!!errors.confirm} helperText={errors.confirm?.message}
-            InputProps={{ startAdornment: (<InputAdornment position="start"><LockOutlinedIcon fontSize="small" /></InputAdornment>) }}
-            InputLabelProps={labelProps}
-          />
-          <TextField fullWidth label={t('full_name_en') as any || t('full_name')} placeholder={t('name_placeholder') || ''} autoComplete="name"
-            {...register('name')} error={!!errors.name} helperText={errors.name?.message}
-            InputProps={{ startAdornment: (<InputAdornment position="start"><PersonOutlineIcon fontSize="small" /></InputAdornment>) }}
-            InputLabelProps={labelProps}
-          />
-          <TextField fullWidth label={t('full_name_fa') as any || t('full_name')} placeholder={t('full_name') as any} autoComplete="name"
-            {...register('full_name' as const)} error={!!(errors as any).full_name} helperText={(errors as any).full_name?.message as any}
-            InputProps={{ startAdornment: (<InputAdornment position="start"><PersonOutlineIcon fontSize="small" /></InputAdornment>) }}
-            InputLabelProps={labelProps}
-          />
-          <TextField fullWidth label={t('phone_label') as any || t('phone')} placeholder={t('phone_placeholder') as any || ''} autoComplete="tel" type="tel"
-            {...register('phone')} error={!!(errors as any).phone} helperText={(errors as any).phone?.message as any}
-            InputProps={{ startAdornment: (<InputAdornment position="start"><PhoneIphoneOutlinedIcon fontSize="small" /></InputAdornment>) }}
-            InputLabelProps={labelProps}
-          />
-          <TextField fullWidth label={t('username_label') || 'Username'} placeholder={t('username_label') || ''} autoComplete="username"
-            {...register('username')} error={!!errors.username} helperText={errors.username?.message}
-            InputProps={{ startAdornment: (<InputAdornment position="start"><PersonOutlineIcon fontSize="small" /></InputAdornment>) }}
-            InputLabelProps={labelProps}
-          />
-          <TextField fullWidth label={t('student_id') as any || 'Student ID'} placeholder={t('student_id') as any} autoComplete="off"
-            {...register('student_id' as any)} error={!!(errors as any).student_id} helperText={(errors as any).student_id?.message as any}
-            InputLabelProps={labelProps}
-          />
+          </Tooltip>
+          <Tooltip open={!!errors.confirm && (touchedFields.confirm || isSubmitted)} title={(touchedFields.confirm || isSubmitted) ? (errors.confirm?.message || '') : ''} placement="top" arrow>
+            <TextField fullWidth label={t('confirm_password')} placeholder="••••••••" type={showPassword ? 'text' : 'password'} autoComplete="new-password"
+              {...register('confirm')} error={!!errors.confirm && (touchedFields.confirm || isSubmitted)} helperText={(!!errors.confirm && (touchedFields.confirm || isSubmitted)) ? errors.confirm?.message : ''}
+              InputProps={{ startAdornment: (<InputAdornment position="start"><LockOutlinedIcon fontSize="small" /></InputAdornment>) }}
+              InputLabelProps={labelProps}
+            />
+          </Tooltip>
+          <Tooltip open={!!errors.name && (touchedFields.name || isSubmitted)} title={(touchedFields.name || isSubmitted) ? (errors.name?.message || '') : ''} placement="top" arrow>
+            <TextField fullWidth label={t('full_name_en') as any || t('full_name')} placeholder={t('name_placeholder') || ''} autoComplete="name"
+              {...register('name')} error={!!errors.name && (touchedFields.name || isSubmitted)} helperText={(!!errors.name && (touchedFields.name || isSubmitted)) ? errors.name?.message : ''}
+              InputProps={{ startAdornment: (<InputAdornment position="start"><PersonOutlineIcon fontSize="small" /></InputAdornment>) }}
+              InputLabelProps={labelProps}
+            />
+          </Tooltip>
+          <Tooltip open={!!(errors as any).full_name && (((touchedFields as any).full_name) || isSubmitted)} title={(((touchedFields as any).full_name) || isSubmitted) ? (((errors as any).full_name?.message as any) || '') : ''} placement="top" arrow>
+            <TextField fullWidth label={t('full_name_fa') as any || t('full_name')} placeholder={t('full_name') as any} autoComplete="name"
+              {...register('full_name' as const)} error={!!(errors as any).full_name && (((touchedFields as any).full_name) || isSubmitted)} helperText={((errors as any).full_name && (((touchedFields as any).full_name) || isSubmitted)) ? ((errors as any).full_name?.message as any) : ''}
+              InputProps={{ startAdornment: (<InputAdornment position="start"><PersonOutlineIcon fontSize="small" /></InputAdornment>) }}
+              InputLabelProps={labelProps}
+            />
+          </Tooltip>
+          <Tooltip open={!!(errors as any).phone && (((touchedFields as any).phone) || isSubmitted)} title={(((touchedFields as any).phone) || isSubmitted) ? (((errors as any).phone?.message as any) || '') : ''} placement="top" arrow>
+            <TextField fullWidth label={t('phone_label') as any || t('phone')} placeholder={t('phone_placeholder') as any || ''} autoComplete="tel" type="tel"
+              {...register('phone')} error={!!(errors as any).phone && (((touchedFields as any).phone) || isSubmitted)} helperText={((errors as any).phone && (((touchedFields as any).phone) || isSubmitted)) ? ((errors as any).phone?.message as any) : ''}
+              InputProps={{ startAdornment: (<InputAdornment position="start"><PhoneIphoneOutlinedIcon fontSize="small" /></InputAdornment>) }}
+              InputLabelProps={labelProps}
+            />
+          </Tooltip>
+          <Tooltip open={!!errors.username && (touchedFields.username || isSubmitted)} title={(touchedFields.username || isSubmitted) ? (errors.username?.message || '') : ''} placement="top" arrow>
+            <TextField fullWidth label={t('username_label') || 'Username'} placeholder={t('username_label') || ''} autoComplete="username"
+              {...register('username')} error={!!errors.username && (touchedFields.username || isSubmitted)} helperText={(!!errors.username && (touchedFields.username || isSubmitted)) ? errors.username?.message : ''}
+              InputProps={{ startAdornment: (<InputAdornment position="start"><PersonOutlineIcon fontSize="small" /></InputAdornment>) }}
+              InputLabelProps={labelProps}
+            />
+          </Tooltip>
+          <Tooltip open={!!(errors as any).student_id && (((touchedFields as any).student_id) || isSubmitted)} title={(((touchedFields as any).student_id) || isSubmitted) ? (((errors as any).student_id?.message as any) || '') : ''} placement="top" arrow>
+            <TextField fullWidth label={t('student_id') as any || 'Student ID'} placeholder={t('student_id') as any} autoComplete="off"
+              {...register('student_id' as any)} error={!!(errors as any).student_id && (((touchedFields as any).student_id) || isSubmitted)} helperText={((errors as any).student_id && (((touchedFields as any).student_id) || isSubmitted)) ? ((errors as any).student_id?.message as any) : ''}
+              InputLabelProps={labelProps}
+            />
+          </Tooltip>
         </Box>
-        <Button type="button" onClick={() => handleSubmit(onSubmit)()} variant="contained" color="secondary" disabled={isSubmitting || retryAfter > 0} sx={{ py: 1.2, alignSelf: 'flex-start' }}>
+        <Button type="submit" variant="contained" color="secondary" disabled={isSubmitting || retryAfter > 0} sx={{ py: 1.2, alignSelf: 'flex-start' }}>
           {t('sign_up')}
         </Button>
         <Typography variant="body2" color="text.secondary" textAlign="center">

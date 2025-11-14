@@ -6,28 +6,33 @@ import { useTranslation } from 'react-i18next';
 import { useColorScheme } from '@mui/material/styles';
 import Image from 'next/image';
 import logoLight from '@/app/logo.png';
-import logoDark from '@/app/logo-dark-mode.png';
+import logoDark from '@/app/logo-dark-mode.webp';
+import Router from 'next/router';
 
 export default function SplashScreen() {
   const { mode } = useColorScheme();
-  const [visible, setVisible] = React.useState(true);
+  const [visible, setVisible] = React.useState(false);
   const { t } = useTranslation();
 
   React.useEffect(() => {
-    const done = () => setVisible(false);
-    if (document.readyState === 'complete') {
-      // Ensure the splash is visible at least briefly even if load already fired
-      const id = setTimeout(done, 400);
-      return () => clearTimeout(id);
-    }
-    window.addEventListener('load', done, { once: true });
-    return () => window.removeEventListener('load', done);
+    let delayId: any;
+    const onStart = () => { delayId = setTimeout(() => setVisible(true), 150); };
+    const onDone = () => { clearTimeout(delayId); setVisible(false); };
+    Router.events.on('routeChangeStart', onStart);
+    Router.events.on('routeChangeComplete', onDone);
+    Router.events.on('routeChangeError', onDone);
+    return () => {
+      Router.events.off('routeChangeStart', onStart);
+      Router.events.off('routeChangeComplete', onDone);
+      Router.events.off('routeChangeError', onDone);
+      clearTimeout(delayId);
+    };
   }, []);
 
   const logo = mode === 'dark' ? logoDark : logoLight;
 
   return (
-    <Fade in={visible} timeout={{ enter: 100, exit: 400 }} unmountOnExit>
+    <Fade in={visible} timeout={{ enter: 100, exit: 300 }} unmountOnExit>
       <Box
         aria-label="Loading"
         role="status"

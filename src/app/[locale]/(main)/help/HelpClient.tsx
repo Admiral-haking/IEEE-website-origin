@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
 import { Paper, Stack, Typography, Button, Grid, Box, Link } from '@mui/material';
+import AssistWidget from '@/components/AssistWidget';
 import NextLink from 'next/link';
 import { useTranslation } from 'react-i18next';
 
@@ -57,6 +58,7 @@ export default function HelpClient() {
           </Paper>
         </Grid>
       </Grid>
+      <AssistWidget />
     </>
   );
 }

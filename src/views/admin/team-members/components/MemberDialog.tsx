@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { MemberFormSchema } from '@/validators/forms/teamMember';
 import Editor from '@/components/Editor';
 import MediaPickerDialog from '@/components/MediaPickerDialog';
+import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
 
 const Schema = MemberFormSchema;
@@ -84,9 +85,8 @@ export default function MemberDialog({ open, onClose, initial, onSubmit }: { ope
             <Box>
               <Button variant="outlined" size="small" onClick={() => setAvatarPicker(true)}>{t('select_image')}</Button>
               {avatarUrl && (
-                <Box sx={{ mt: 1 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={avatarUrl} alt="avatar" style={{ maxWidth: 140, borderRadius: 8 }} />
+                <Box sx={{ mt: 1, position: 'relative', width: 140, height: 140, borderRadius: 1, overflow: 'hidden' }}>
+                  <Image src={avatarUrl} alt="avatar" fill sizes="160px" style={{ objectFit: 'cover' }} />
                 </Box>
               )}
             </Box>

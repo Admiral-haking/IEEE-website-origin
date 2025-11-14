@@ -2,6 +2,7 @@ import React from 'react';
 import '@/lib/mongoose';
 import Capability from '@/models/Capability';
 import { Container, Typography, Box, Chip, Stack } from '@mui/material';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { buildDocMetadata, getBaseUrl } from '@/lib/metadata';
 import mongooseConn from '@/lib/mongoose';
@@ -27,8 +28,16 @@ export default async function CapabilityPage({ params }: { params: Promise<{ loc
         url: `${getBaseUrl()}/${(doc as any).locale}/capabilities/${(doc as any).slug || (doc as any)._id}`
       }) }} />
       {doc.imageFileId && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={`/api/media/${doc.imageFileId}`} alt={doc.title} style={{ width: '100%', maxHeight: 420, objectFit: 'cover', borderRadius: 12, marginBottom: 16 }} />
+        <Box sx={{ position: 'relative', width: '100%', height: { xs: 220, sm: 320, md: 420 }, borderRadius: 2, overflow: 'hidden', mb: 2 }}>
+          <Image
+            src={`/api/media/${doc.imageFileId}`}
+            alt={doc.title}
+            fill
+            sizes="100vw"
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+        </Box>
       )}
       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
         <Typography component="h1" variant="h3" fontWeight={800}>{doc.title}</Typography>

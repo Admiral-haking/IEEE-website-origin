@@ -9,8 +9,12 @@ let initialized = false;
 
 export function ensureI18n(lng?: 'en'|'fa') {
   if (!initialized && !i18n.isInitialized) {
-    i18n
-      .use(LanguageDetector)
+    const chain = i18n as any;
+    // To avoid hydration mismatch, honor SSR-provided language strictly at init.
+    if (!lng) {
+      chain.use(LanguageDetector);
+    }
+    chain
       .use(initReactI18next)
       .init({
         lng: lng || 'en',
@@ -23,10 +27,12 @@ export function ensureI18n(lng?: 'en'|'fa') {
         defaultNS: 'common',
         ns: ['common'],
         interpolation: { escapeValue: false },
-        detection: {
-          order: ['localStorage', 'cookie', 'navigator', 'htmlTag'],
-          caches: ['localStorage', 'cookie']
-        }
+        detection: lng
+          ? undefined
+          : {
+              order: ['cookie', 'localStorage', 'navigator', 'htmlTag'],
+              caches: ['cookie', 'localStorage']
+            }
       });
     initialized = true;
   }

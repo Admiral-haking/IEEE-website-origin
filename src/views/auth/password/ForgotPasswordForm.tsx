@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import useAxios from 'axios-hooks';
-import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, TextField, Typography, Tooltip } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import type { Route } from 'next';
@@ -21,7 +21,7 @@ export default function ForgotPasswordForm({ locale }: { locale: 'en'|'fa' }) {
   const theme = useTheme();
   const isRtl = theme.direction === 'rtl';
   const [{ data, error, loading }, exec] = useAxios({ url: '/api/auth/forgot-password', method: 'POST' }, { manual: true });
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Values>({
+  const { register, handleSubmit, formState: { errors, isSubmitting, touchedFields, isSubmitted } } = useForm<Values>({
     resolver: zodResolver(Schema),
     defaultValues: { email: '' },
   });
@@ -46,16 +46,18 @@ export default function ForgotPasswordForm({ locale }: { locale: 'en'|'fa' }) {
         {error && !success && (
           <Alert severity="error">{String(errText)}</Alert>
         )}
-        <TextField
-          type="email"
-          label={t('email_label')}
-          placeholder={t('email_placeholder') || ''}
-          autoComplete="email"
-          {...register('email')}
-          error={!!errors.email}
-          helperText={errors.email?.message}
-          InputLabelProps={isRtl ? { sx: { left: 14, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : undefined}
-        />
+        <Tooltip open={!!errors.email && (touchedFields.email || isSubmitted)} title={(touchedFields.email || isSubmitted) ? (errors.email?.message || '') : ''} placement="top" arrow>
+          <TextField
+            type="email"
+            label={t('email_label')}
+            placeholder={t('email_placeholder') || ''}
+            autoComplete="email"
+            {...register('email')}
+            error={!!errors.email && (touchedFields.email || isSubmitted)}
+            helperText={(!!errors.email && (touchedFields.email || isSubmitted)) ? errors.email?.message : ''}
+            InputLabelProps={isRtl ? { sx: { left: 14, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : undefined}
+          />
+        </Tooltip>
         <Button type="submit" variant="contained" color="secondary" disabled={isSubmitting || loading}>
           {t('password_reset_cta') as string}
         </Button>

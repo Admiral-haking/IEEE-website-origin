@@ -5,7 +5,6 @@ import { useColorScheme } from "@mui/material/styles";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import showReloadSpinner from '@/lib/reload-spinner';
 
 export default function ThemeToggle() {
   const { mode, setMode } = useColorScheme();
@@ -18,15 +17,8 @@ export default function ThemeToggle() {
       : t("tooltip_switch_theme_to_dark", "Switch to dark mode");
 
   const handleToggle = () => {
+    // MUI ColorSchemeProvider updates styles without hard reload
     setMode(next);
-    // Force a full reload to ensure all fields/components re-render with new theme
-    if (typeof window !== 'undefined') {
-      // Give MUI time to persist scheme, then reload
-      const docLang = (document.documentElement.getAttribute('lang') || '').toLowerCase();
-      const msg = docLang.startsWith('fa') ? 'در حال تغییر پوسته…' : 'Applying theme…';
-      showReloadSpinner(msg);
-      setTimeout(() => { try { window.location.reload(); } catch {} }, 80);
-    }
   };
 
   return (

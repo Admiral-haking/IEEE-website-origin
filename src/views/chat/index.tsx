@@ -43,6 +43,28 @@ export default function ChatView() {
   const [input, setInput] = React.useState('');
   const [provider, setProvider] = React.useState<'openai'|'deepseek'>('openai');
   const [model, setModel] = React.useState('gpt-4o-mini');
+  const [aiFlags, setAiFlags] = React.useState<{ enabled: boolean; provider: 'openai'|'deepseek'|'none' } | null>(null);
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/settings/public/features', { cache: 'no-store' });
+        const data = await res.json();
+        if (!active) return;
+        if (data?.ai) {
+          setAiFlags({ enabled: !!data.ai.enabled, provider: (data.ai.provider || 'none') });
+          if (data.ai.provider === 'deepseek') {
+            setProvider('deepseek');
+            setModel((data.ai.defaultModels?.deepseek as string) || 'deepseek-chat');
+          } else if (data.ai.provider === 'openai') {
+            setProvider('openai');
+            setModel((data.ai.defaultModels?.openai as string) || 'gpt-4o-mini');
+          }
+        }
+      } catch {}
+    })();
+    return () => { active = false; };
+  }, []);
   const [{ data: messagesData }, refetchMessages] = useAxios({ url: selected ? `/api/chat/sessions/${selected.id}/messages` : '', method: 'GET' }, { manual: true });
   const [, sendMessage] = useAxios({ method: 'POST' }, { manual: true });
   const [sendErr, setSendErr] = React.useState<string | null>(null);
@@ -130,6 +152,7 @@ export default function ChatView() {
                 setProvider(p);
                 setModel(p === 'openai' ? 'gpt-4o-mini' : 'deepseek-chat');
               }}
+              disabled={aiFlags ? (aiFlags.provider !== 'none') : false}
             >
               <MenuItem value="openai">OpenAI</MenuItem>
               <MenuItem value="deepseek">DeepSeek</MenuItem>
@@ -162,6 +185,9 @@ export default function ChatView() {
             <TextField fullWidth placeholder={t('type_message') || 'Type a message'} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSend(); } }} />
             <IconButton color="secondary" onClick={onSend} aria-label="send"><SendIcon /></IconButton>
           </Stack>
+          {aiFlags && aiFlags.enabled === false && (
+            <Alert severity="info" sx={{ mt: 1 }}>{t('ai_disabled') || 'AI responses are disabled by admin.'}</Alert>
+          )}
         </Paper>
       </Stack>
     </Container>

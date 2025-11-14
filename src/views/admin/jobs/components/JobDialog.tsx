@@ -15,6 +15,7 @@ import { JobFormSchema } from '@/validators/forms/job';
 import Editor from '@/components/Editor';
 import { useTranslation } from 'react-i18next';
 import MediaPickerDialog from '@/components/MediaPickerDialog';
+import Image from 'next/image';
 
 const Schema = JobFormSchema;
 type Values = z.infer<typeof JobFormSchema>;
@@ -53,8 +54,8 @@ export default function JobDialog({ open, onClose, initial, onSubmit }: { open: 
           <Box>
             <Button variant="outlined" size="small" onClick={() => setPickerOpen(true)}>{t('select_image')}</Button>
             {imageSrc && (
-              <Box sx={{ mt: 1 }}>
-                <Box component="img" src={imageSrc} alt="cover" sx={{ maxWidth: '100%', borderRadius: 1 }} />
+              <Box sx={{ mt: 1, position: 'relative', width: '100%', height: 220, borderRadius: 1, overflow: 'hidden' }}>
+                <Image src={imageSrc} alt="cover" fill sizes="100vw" style={{ objectFit: 'cover' }} />
               </Box>
             )}
           </Box>

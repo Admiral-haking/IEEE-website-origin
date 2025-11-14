@@ -3,6 +3,7 @@ import { ForgotPasswordSchema } from '@/server/auth/validators';
 import { requestPasswordReset } from '@/server/auth/service';
 import { AppError } from '@/server/errors';
 import { incrWithTtl } from '@/lib/redis';
+import { getFeatures } from '@/server/settings/service';
 
 const RATE_WINDOW_SEC = Number(process.env.PASSWORD_RESET_REQUEST_WINDOW_SEC || 10 * 60);
 const RATE_LIMIT = Number(process.env.PASSWORD_RESET_REQUEST_LIMIT || 5);
@@ -31,6 +32,10 @@ async function checkRate(ip: string, email: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    const features = await getFeatures();
+    if (!features.auth.passwordResetEnabled) {
+      return NextResponse.json({ error: 'Password reset disabled' }, { status: 503 });
+    }
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     const json = await req.json();
     const input = ForgotPasswordSchema.parse(json);

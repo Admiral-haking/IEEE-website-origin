@@ -5,9 +5,14 @@ import User from '@/models/User';
 import { AuthCookie, signToken } from '@/server/auth/jwt';
 import '@/lib/mongoose';
 import { normalizeIrPhone } from '@/server/sms/service';
+import { getFeatures } from '@/server/settings/service';
 
 export async function POST(req: NextRequest) {
   try {
+    const features = await getFeatures();
+    if (!features.auth.phoneOtpEnabled) {
+      return NextResponse.json({ error: 'OTP login disabled' }, { status: 503 });
+    }
     const { phone, code } = await req.json();
     const p = normalizeIrPhone(String(phone || ''));
     const c = String(code || '').trim();

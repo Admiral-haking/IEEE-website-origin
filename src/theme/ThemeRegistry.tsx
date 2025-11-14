@@ -9,10 +9,12 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { enUS, faIR } from '@mui/material/locale';
 
-export default function ThemeRegistry({ children }: { children: React.ReactNode }) {
+export default function ThemeRegistry({ children, initialLocale }: { children: React.ReactNode; initialLocale?: 'en'|'fa' }) {
   const pathname = usePathname();
   const seg = (pathname || '/').split('/').filter(Boolean)[0];
-  const isRtl = seg === 'fa';
+  const derived = seg === 'fa' ? 'fa' : 'en';
+  const effectiveLocale = initialLocale || derived;
+  const isRtl = effectiveLocale === 'fa';
   const themed = React.useMemo(
     () => createTheme(baseTheme, { direction: isRtl ? 'rtl' : 'ltr' }, isRtl ? faIR : enUS),
     [isRtl]

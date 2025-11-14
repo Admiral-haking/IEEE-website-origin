@@ -8,19 +8,20 @@ import SplashScreen from '@/components/SplashScreen';
 import TopProgressBar from '@/components/TopProgressBar';
 import { configure } from 'axios-hooks';
 import axios from '@/lib/axios';
+import VitalsReporter from '@/components/VitalsReporter';
 
 export default function Providers({ children, initialLocale }: { children: React.ReactNode; initialLocale?: 'en'|'fa' }) {
   // Configure axios-hooks to use our axios instance with baseURL
   // and disable SSR data fetching to avoid server-side auth/cookie issues.
   configure({ axios, defaultOptions: { ssr: false } });
   return (
-    <I18nProvider initialLocale={initialLocale}
-    >
-      <RtlProvider>
-        <ThemeRegistry>
+    <I18nProvider initialLocale={initialLocale}>
+      <RtlProvider initialLocale={initialLocale}>
+        <ThemeRegistry initialLocale={initialLocale}>
           <Suspense fallback={null}>
             <TopProgressBar />
           </Suspense>
+          <VitalsReporter />
           {children}
           <SplashScreen />
         </ThemeRegistry>

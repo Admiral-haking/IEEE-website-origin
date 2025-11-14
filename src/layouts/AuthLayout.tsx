@@ -6,7 +6,8 @@ import { useColorScheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { usePathname } from 'next/navigation';
 import logoLight from '@/app/logo.png';
-import logoDark from '@/app/logo-dark-mode.png';
+import logoDark from '@/app/logo-dark-mode.webp';
+import AssistWidget from '@/components/AssistWidget';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const { mode } = useColorScheme();
@@ -22,8 +23,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         aria-hidden
         sx={{
           position: 'absolute', inset: 0, zIndex: -1,
-          background: `radial-gradient(900px 500px at 50% -20%, rgba(82,168,255,0.20), transparent 60%),
-                       radial-gradient(700px 400px at 90% 10%, rgba(126,87,194,0.18), transparent 60%)`
+          background: `radial-gradient(900px 500px at 50% -20%, rgba(82,168,255,0.16), transparent 60%),
+                       radial-gradient(700px 400px at 90% 10%, rgba(126,87,194,0.14), transparent 60%)`
         }}
       />
       <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
@@ -48,6 +49,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <Typography variant="caption" color="text.secondary">Protected by modern security practices</Typography>
         </Stack>
       </Container>
+      <AssistWidget />
     </Box>
   );
 }

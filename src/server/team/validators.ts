@@ -7,7 +7,7 @@ const OptionalUrlOrRelativePath = z.preprocess((v) => {
   return v;
 }, UrlOrRelativePath).optional();
 
-export const DisciplineEnum = z.enum(['software','hardware','networking']);
+export const DisciplineEnum = z.enum(['software','hardware','networking','computer']);
 
 // Optional slug: empty string -> undefined, otherwise non-empty string
 const OptionalSlug = z.preprocess((v) => {
@@ -23,6 +23,7 @@ export const CreateMemberSchema = z.object({
   slug: OptionalSlug,
   role: z.string().min(1),
   discipline: DisciplineEnum,
+  userId: z.string().min(12).optional(),
   email: z.string().email().optional(),
   avatarUrl: OptionalUrlOrRelativePath,
   location: z.string().optional(),
@@ -39,6 +40,7 @@ export const UpdateMemberSchema = z.object({
   slug: OptionalSlug,
   role: z.string().min(1).optional(),
   discipline: DisciplineEnum.optional(),
+  userId: z.string().min(12).optional(),
   email: z.string().email().optional(),
   avatarUrl: OptionalUrlOrRelativePath,
   location: z.string().optional(),

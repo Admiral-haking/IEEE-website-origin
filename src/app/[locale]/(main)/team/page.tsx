@@ -1,10 +1,8 @@
 import React from 'react';
-import '@/lib/mongoose';
-import TeamMember from '@/models/TeamMember';
 import { Avatar, Card, CardActionArea, Chip, Container, Grid, Stack, Typography } from '@mui/material';
 import NextLink from 'next/link';
 import type { Metadata } from 'next';
-import { buildListMetadata } from '@/lib/metadata';
+import { buildListMetadata, getBaseUrl } from '@/lib/metadata';
 export const revalidate = 60;
 
 async function getDict(locale: 'en' | 'fa') {
@@ -14,9 +12,28 @@ async function getDict(locale: 'en' | 'fa') {
 export default async function TeamPage({ params }: { params: Promise<{ locale: 'en' | 'fa' }> }) {
   const { locale } = await params;
   const dict = await getDict(locale);
-  const members = await TeamMember.find({ locale }).sort({ createdAt: -1 }).lean();
+  let members: any[] = [];
+  try {
+    const res = await fetch(`${getBaseUrl()}/api/public/team?locale=${locale}`, { next: { revalidate: 60 } });
+    if (res.ok) {
+      const data: any = await res.json();
+      members = (data.items || data.members || []).map((m: any) => ({ ...m }));
+    }
+  } catch {}
+  const base = getBaseUrl();
+  const listLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: members.map((m: any, i: number) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${base}/${locale}/team/${m.slug || String(m._id)}`,
+      name: m.name,
+    }))
+  } as any;
   return (
     <Container sx={{ py: 6 }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listLd) }} />
       <Stack gap={1} sx={{ mb: 3 }}>
         <Typography component="h1" variant="h4" fontWeight={800} suppressHydrationWarning>{dict.our_team}</Typography>
         <Typography color="text.secondary">{dict.tagline}</Typography>

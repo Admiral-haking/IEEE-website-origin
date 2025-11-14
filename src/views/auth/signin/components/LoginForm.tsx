@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import useAxios from 'axios-hooks';
-import { Alert, Box, Button, Stack, TextField, InputAdornment, IconButton, FormControlLabel, Checkbox, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, TextField, InputAdornment, IconButton, FormControlLabel, Checkbox, Typography, Tooltip } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import useLocale from '@/hooks/useLocale';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
@@ -34,8 +34,21 @@ export default function LoginForm({ redirectTo }: Props) {
   const isRtl = theme.direction === 'rtl';
   const { t, i18n } = useTranslation();
   const resendLocale = i18n.language?.startsWith('fa') ? 'fa' : 'en';
+  const [authFlags, setAuthFlags] = React.useState<{ passwordResetEnabled: boolean; signupEnabled: boolean }>({ passwordResetEnabled: true, signupEnabled: true });
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/settings/public/features', { cache: 'no-store' });
+        const data = await res.json();
+        if (!active) return;
+        if (data?.auth) setAuthFlags({ passwordResetEnabled: !!data.auth.passwordResetEnabled, signupEnabled: !!data.auth.signupEnabled });
+      } catch {}
+    })();
+    return () => { active = false; };
+  }, []);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Values>({
+  const { register, handleSubmit, formState: { errors, isSubmitting, touchedFields, isSubmitted } } = useForm<Values>({
     resolver: zodResolver(Schema),
     defaultValues: { identifier: '', password: '' }
   });
@@ -144,49 +157,53 @@ export default function LoginForm({ redirectTo }: Props) {
           </Alert>
         )}
 
-        <TextField
-          label={t('login_identifier_label') || t('email_label')}
-          placeholder={t('login_identifier_placeholder') || t('email_placeholder') || ''}
-          autoComplete="username"
-          {...register('identifier')}
-          error={!!errors.identifier}
-          helperText={errors.identifier?.message}
-          sx={{ '& .MuiOutlinedInput-input': { px: 2 } }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <MailOutlineIcon fontSize="small" />
-              </InputAdornment>
-            )
-          }}
-          InputLabelProps={isRtl ? { sx: { left: 16, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
-        />
+        <Tooltip open={!!errors.identifier && (touchedFields.identifier || isSubmitted)} title={(touchedFields.identifier || isSubmitted) ? (errors.identifier?.message || '') : ''} placement="top" arrow>
+          <TextField
+            label={t('login_identifier_label') || t('email_label')}
+            placeholder={t('login_identifier_placeholder') || t('email_placeholder') || ''}
+            autoComplete="username"
+            {...register('identifier')}
+            error={!!errors.identifier && (touchedFields.identifier || isSubmitted)}
+            helperText={(!!errors.identifier && (touchedFields.identifier || isSubmitted)) ? errors.identifier?.message : ''}
+            sx={{ '& .MuiOutlinedInput-input': { px: 2 } }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <MailOutlineIcon fontSize="small" />
+                </InputAdornment>
+              )
+            }}
+            InputLabelProps={isRtl ? { sx: { left: 16, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
+          />
+        </Tooltip>
 
-        <TextField
-          label={t('password_label')}
-          placeholder={(t('password_placeholder') as string) || ''}
-          type={showPassword ? 'text' : 'password'}
-          autoComplete="current-password"
-          {...register('password')}
-          error={!!errors.password}
-          helperText={errors.password?.message}
-          sx={{ '& .MuiOutlinedInput-input': { px: 2 } }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <LockOutlinedIcon fontSize="small" />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton aria-label="toggle password visibility" onClick={() => setShowPassword((v) => !v)} edge="end" size="small">
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            )
-          }}
-          InputLabelProps={isRtl ? { sx: { left: 16, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
-        />
+        <Tooltip open={!!errors.password && (touchedFields.password || isSubmitted)} title={(touchedFields.password || isSubmitted) ? (errors.password?.message || '') : ''} placement="top" arrow>
+          <TextField
+            label={t('password_label')}
+            placeholder={(t('password_placeholder') as string) || ''}
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            {...register('password')}
+            error={!!errors.password && (touchedFields.password || isSubmitted)}
+            helperText={(!!errors.password && (touchedFields.password || isSubmitted)) ? errors.password?.message : ''}
+            sx={{ '& .MuiOutlinedInput-input': { px: 2 } }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlinedIcon fontSize="small" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton aria-label="toggle password visibility" onClick={() => setShowPassword((v) => !v)} edge="end" size="small">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+            InputLabelProps={isRtl ? { sx: { left: 16, right: 'auto', transformOrigin: 'left top', textAlign: 'left' } } : { sx: { left: 16, transformOrigin: 'left top' } }}
+          />
+        </Tooltip>
 
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <FormControlLabel control={<Checkbox size="small" />} label={<Typography variant="body2">{t('remember_me')}</Typography>} />
@@ -196,12 +213,16 @@ export default function LoginForm({ redirectTo }: Props) {
           {t('sign_in')}
         </Button>
 
-        <Typography variant="body2" color="text.secondary" textAlign="center">
-          {t('no_account')} <Button size="small" variant="text" href={`/${routeLocale}/signup` as Route}>{t('create_one')}</Button>
-        </Typography>
-        <Button size="small" variant="text" href={`/${routeLocale}/forgot-password` as Route} sx={{ alignSelf: 'center' }}>
-          {t('forgot_password') as string}
-        </Button>
+        {authFlags.signupEnabled && (
+          <Typography variant="body2" color="text.secondary" textAlign="center">
+            {t('no_account')} <Button size="small" variant="text" href={`/${routeLocale}/signup` as Route}>{t('create_one')}</Button>
+          </Typography>
+        )}
+        {authFlags.passwordResetEnabled && (
+          <Button size="small" variant="text" href={`/${routeLocale}/forgot-password` as Route} sx={{ alignSelf: 'center' }}>
+            {t('forgot_password') as string}
+          </Button>
+        )}
       </Stack>
     </Box>
   );

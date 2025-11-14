@@ -4,6 +4,7 @@ import { loginUser } from '@/server/auth/service';
 import { AppError } from '@/server/errors';
 import { AuthCookie } from '@/server/auth/jwt';
 import { incrWithTtl } from '@/lib/redis';
+import { getFeatures } from '@/server/settings/service';
 
 const RATE_LOGIN_WINDOW_SEC = Number(process.env.AUTH_LOGIN_WINDOW_SEC || (process.env.NODE_ENV === 'production' ? 10 * 60 : 60));
 const RATE_LOGIN_LIMIT_IP = Number(process.env.AUTH_LOGIN_LIMIT_IP || (process.env.NODE_ENV === 'production' ? 3 : 20));
@@ -34,9 +35,16 @@ async function checkRate(ip: string, identifier: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    const features = await getFeatures();
+    if (!features.auth.emailPasswordEnabled) {
+      return NextResponse.json({ error: 'Email/password login disabled' }, { status: 503 });
+    }
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     const json = await req.json();
     const input = LoginSchema.parse(json);
+    if (!features.auth.usernameLoginEnabled && !String(input.identifier || '').includes('@')) {
+      return NextResponse.json({ error: 'Username login disabled' }, { status: 422 });
+    }
     const rate = await checkRate(ip, input.identifier);
     if (!rate.ok) return NextResponse.json({ error: 'Too Many Requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfter || 60) } });
     const { user, token } = await loginUser(input);

@@ -2,6 +2,7 @@ import '@/lib/mongoose';
 import Notification from '@/models/Notification';
 import User from '@/models/User';
 import { sendNotificationEmail } from '@/server/mail/mailer';
+import { getFeatures } from '@/server/settings/service';
 
 type Channel = 'app' | 'email';
 
@@ -106,8 +107,8 @@ export async function broadcastNotification(userIds: string[], payload: Omit<Cre
 }
 
 export async function notifyUsersNewBlogPost(post: { id: string; title: string }) {
-  const emailEnabled = process.env.NOTIFICATIONS_EMAIL_ENABLED !== '0' && process.env.NOTIFICATIONS_EMAIL_ENABLED !== 'false';
-  const channels = emailEnabled ? ['app', 'email'] as Channel[] : ['app'] as Channel[];
+  const f = await getFeatures();
+  const channels = f.notificationsEmailEnabled ? ['app', 'email'] as Channel[] : ['app'] as Channel[];
   const users = await User.find({ emailVerified: true }).select('_id').lean();
   const ids = users.map((u: any) => String(u._id));
   await broadcastNotification(ids, {

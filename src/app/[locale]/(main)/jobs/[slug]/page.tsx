@@ -2,6 +2,7 @@ import React from 'react';
 import '@/lib/mongoose';
 import Job from '@/models/Job';
 import { Container, Typography, Box, Chip } from '@mui/material';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { buildDocMetadata, getBaseUrl } from '@/lib/metadata';
 import mongooseConn from '@/lib/mongoose';
@@ -27,8 +28,16 @@ export default async function JobPage({ params }: { params: Promise<{ locale: 'e
         }) }}
       />
       {job.imageFileId && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={`/api/media/${job.imageFileId}`} alt={job.title} style={{ width: '100%', maxHeight: 420, objectFit: 'cover', borderRadius: 12, marginBottom: 16 }} />
+        <Box sx={{ position: 'relative', width: '100%', height: { xs: 220, sm: 320, md: 420 }, borderRadius: 2, overflow: 'hidden', mb: 2 }}>
+          <Image
+            src={`/api/media/${job.imageFileId}`}
+            alt={job.title}
+            fill
+            sizes="100vw"
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+        </Box>
       )}
       <Typography component="h1" variant="h3" fontWeight={800} gutterBottom>{job.title}</Typography>
       <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>

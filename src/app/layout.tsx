@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Providers from '@/components/Providers';
 import { headers, cookies } from 'next/headers';
+import { latin, fa } from './fonts';
 
 export const metadata: Metadata = {
   title: 'IEEE Student Branch — Quchan University of Technology',
@@ -29,10 +30,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const dir = locale === 'fa' ? 'rtl' : 'ltr';
 
   return (
-    <html lang={locale} dir={dir} suppressHydrationWarning>
+    <html lang={locale} dir={dir} suppressHydrationWarning className={`${latin.variable} ${fa.variable}`}>
       <body>
         <Providers initialLocale={locale}>{children}</Providers>
       </body>
     </html>
   );
 }
+
+// Web Vitals are reported via a client component (VitalsReporter) to avoid
+// export incompatibility on App Router layouts.

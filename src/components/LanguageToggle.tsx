@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { usePathname, useRouter } from 'next/navigation';
-import showReloadSpinner from '@/lib/reload-spinner';
 
 type Lang = 'en' | 'fa';
 
@@ -52,14 +51,8 @@ export default function LanguageToggle() {
       path = `/${code}/${parts.join('/')}`;
     }
     handleClose();
-    // More specific localized message
-    showReloadSpinner(code === 'fa' ? 'در حال تغییر زبان…' : 'Switching language…');
-    if (typeof window !== 'undefined') {
-      window.location.assign(path);
-    } else {
-      router.push(path as any);
-      router.refresh();
-    }
+    router.push(path as any);
+    router.refresh();
   };
 
   return (

@@ -15,6 +15,24 @@ type Props = {
 export default function SigninView({ verificationStatus, verificationError, redirectTo }: Props) {
   const { t } = useTranslation();
   const [tab, setTab] = React.useState(0);
+  const [authFlags, setAuthFlags] = React.useState<{ emailPasswordEnabled: boolean; phoneOtpEnabled: boolean; passwordResetEnabled: boolean; signupEnabled: boolean }>({ emailPasswordEnabled: true, phoneOtpEnabled: true, passwordResetEnabled: true, signupEnabled: true });
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/settings/public/features', { cache: 'no-store' });
+        const data = await res.json();
+        if (!active) return;
+        if (data?.auth) setAuthFlags({
+          emailPasswordEnabled: !!data.auth.emailPasswordEnabled,
+          phoneOtpEnabled: !!data.auth.phoneOtpEnabled,
+          passwordResetEnabled: !!data.auth.passwordResetEnabled,
+          signupEnabled: !!data.auth.signupEnabled,
+        });
+      } catch {}
+    })();
+    return () => { active = false; };
+  }, []);
   const successMsg =
     verificationStatus === 'success'
       ? (t('email_verify_success') as string) || ''
@@ -34,11 +52,12 @@ export default function SigninView({ verificationStatus, verificationError, redi
           </Alert>
         )}
         <Tabs value={tab} onChange={(_, v) => setTab(v)}>
-          <Tab label={t('sign_in') as string} />
-          <Tab label={t('login_with_phone') || 'Login with phone'} />
+          {authFlags.emailPasswordEnabled && <Tab label={(t('login_label') as string) || (t('sign_in') as string)} />}
+          {authFlags.phoneOtpEnabled && <Tab label={t('login_with_phone') || 'Login with phone'} />}
         </Tabs>
       </Stack>
-      {tab === 0 ? <LoginForm redirectTo={redirectTo} /> : <OtpLogin redirectTo={redirectTo} />}
+      {(tab === 0 && authFlags.emailPasswordEnabled) ? <LoginForm redirectTo={redirectTo} /> : null}
+      {(tab === 1 && authFlags.phoneOtpEnabled) ? <OtpLogin redirectTo={redirectTo} /> : null}
     </Box>
   );
 }

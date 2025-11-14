@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTokenFromCookies } from '@/server/auth/jwt';
 import ChatSession from '@/models/ChatSession';
 import { AppError } from '@/server/errors';
+import { getFeatures } from '@/server/settings/service';
 import type { ProviderName } from '@/server/ai/providers';
 
 export async function GET() {
-  if (process.env.CHAT_DISABLED === '1' || process.env.CHAT_DISABLED === 'true') {
-    return NextResponse.json({ error: 'Chat temporarily disabled' }, { status: 503 });
-  }
+  const f = await getFeatures();
+  if (!f.chatEnabled) return NextResponse.json({ error: 'Chat temporarily disabled' }, { status: 503 });
+  if (!(f.ai && (f.ai as any).enabled)) return NextResponse.json({ error: 'AI responses disabled' }, { status: 503 });
   try {
     const token = await getTokenFromCookies();
     const items = await ChatSession.find({ userId: token.sub }).sort({ updatedAt: -1 }).lean();
@@ -20,22 +21,27 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  if (process.env.CHAT_DISABLED === '1' || process.env.CHAT_DISABLED === 'true') {
-    return NextResponse.json({ error: 'Chat temporarily disabled' }, { status: 503 });
-  }
+  const f = await getFeatures();
+  if (!f.chatEnabled) return NextResponse.json({ error: 'Chat temporarily disabled' }, { status: 503 });
+  if (!(f.ai && (f.ai as any).enabled)) return NextResponse.json({ error: 'AI responses disabled' }, { status: 503 });
   try {
     const token = await getTokenFromCookies();
     const { provider, model, title } = await req.json();
     if (!provider || !['openai','deepseek'].includes(provider)) throw new AppError('Invalid provider', 400);
+    const allowed = (f.ai as any)?.provider === 'openai' || (f.ai as any)?.provider === 'deepseek' ? [(f.ai as any).provider] : ['openai','deepseek'];
+    if (!allowed.includes(provider)) throw new AppError('Provider not allowed', 400);
 
     // Ensure model is compatible with provider and set defaults
     const p = provider as ProviderName;
     let chosen = String(model || '').trim();
+    const defaults = ((f.ai as any)?.defaultModels || { openai: 'gpt-4o-mini', deepseek: 'deepseek-chat' }) as { openai?: string; deepseek?: string };
     if (p === 'openai') {
-      if (!chosen || chosen.toLowerCase().startsWith('deepseek')) chosen = 'gpt-4o-mini';
+      const def = defaults.openai || 'gpt-4o-mini';
+      if (!chosen || chosen.toLowerCase().startsWith('deepseek')) chosen = def;
     } else if (p === 'deepseek') {
       const validDeepSeek = new Set(['deepseek-chat', 'deepseek-reasoner']);
-      if (!chosen || chosen.toLowerCase().startsWith('gpt') || !validDeepSeek.has(chosen)) chosen = 'deepseek-chat';
+      const def = defaults.deepseek || 'deepseek-chat';
+      if (!chosen || chosen.toLowerCase().startsWith('gpt') || !validDeepSeek.has(chosen)) chosen = def;
     }
 
     const created = await ChatSession.create({ userId: token.sub, provider: p, model: chosen, title: title || '' });

@@ -18,7 +18,7 @@ const nextConfig = {
     NEXT_DISABLE_DEVTOOLS: '1',
   },
   async headers() {
-    const origin = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const isProd = process.env.NODE_ENV === 'production';
     const common = [
       { key: 'X-Frame-Options', value: 'DENY' },

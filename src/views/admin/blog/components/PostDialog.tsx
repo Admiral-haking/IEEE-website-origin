@@ -14,6 +14,7 @@ import { PostFormSchema } from '@/validators/forms/blog';
 import Editor from '@/components/Editor';
 import { useTranslation } from 'react-i18next';
 import MediaPickerDialog from '@/components/MediaPickerDialog';
+import Image from 'next/image';
 
 const Schema = PostFormSchema;
 type Values = z.infer<typeof PostFormSchema>;
@@ -50,9 +51,8 @@ export default function PostDialog({ open, onClose, initial, onSubmit }: {
           <Box>
             <Button variant="outlined" size="small" onClick={() => setPickerOpen(true)}>{t('select_image')}</Button>
             {coverSrc && (
-              <Box sx={{ mt: 1 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={coverSrc} alt="cover" style={{ maxWidth: '100%', borderRadius: 8 }} />
+              <Box sx={{ mt: 1, position: 'relative', width: '100%', height: 220, borderRadius: 1, overflow: 'hidden' }}>
+                <Image src={coverSrc} alt="cover" fill sizes="100vw" style={{ objectFit: 'cover' }} />
               </Box>
             )}
           </Box>

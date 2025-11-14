@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useColorScheme } from '@mui/material/styles';
 import { usePathname } from 'next/navigation';
 import logoLight from '@/app/logo.png';
-import logoDark from '@/app/logo-dark-mode.png';
+import logoDark from '@/app/logo-dark-mode.webp';
 import { AppBar, Button, Container, Link, Stack, Toolbar, Typography, IconButton, Drawer, List, ListItemButton, ListItemText, Divider, Box, ListSubheader, ListItemIcon, Tooltip, Menu, MenuItem } from '@mui/material';
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
@@ -55,6 +55,19 @@ export default function Navbar() {
   }, [channels]);
   const [{ data: notifCount }, fetchNotif] = useAxios({ url: '/api/notifications/count' }, { manual: true });
   const unreadNotifs = Number((notifCount as any)?.unread || 0);
+  const [chatEnabled, setChatEnabled] = React.useState<boolean>(!(process.env.NEXT_PUBLIC_DISABLE_CHAT === '1' || process.env.NEXT_PUBLIC_DISABLE_CHAT === 'true'));
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/settings/public/features', { cache: 'no-store' });
+        const data = await res.json();
+        if (!active) return;
+        if (typeof data?.chatEnabled === 'boolean') setChatEnabled(Boolean(data.chatEnabled));
+      } catch {}
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Defer non-critical API calls to idle time to improve LCP
   React.useEffect(() => {
@@ -84,9 +97,7 @@ export default function Navbar() {
       { href: `/${locale}/capabilities`, key: 'capabilities', label: t('capabilities') },
       { href: `/${locale}/team`, key: 'team', label: t('team') },
       { href: `/${locale}/notifications`, key: 'notifications', label: (t('notifications') as any) || 'Notifications' },
-      ...(process.env.NEXT_PUBLIC_DISABLE_CHAT === '1' || process.env.NEXT_PUBLIC_DISABLE_CHAT === 'true' ? [] : [
-        { href: `/${locale}/chat`, key: 'chat', label: (t('chat') as any) || 'Chat' }
-      ]),
+      ...(chatEnabled ? [ { href: `/${locale}/chat`, key: 'chat', label: (t('chat') as any) || 'Chat' } ] : []),
       { href: `/${locale}/blog`, key: 'blog', label: t('blog') },
       { href: `/${locale}/case-studies`, key: 'case-studies', label: t('case_studies') },
       { href: `/${locale}/jobs`, key: 'jobs', label: t('jobs') },
@@ -94,7 +105,7 @@ export default function Navbar() {
     ] as Array<{ href: string; key: string; label: any }>;
     // Keep Navbar lean; admin links live in AdminLayout side menu
     return arr;
-  }, [locale, t]);
+  }, [locale, t, chatEnabled]);
   const roleLabel = role === 'admin' ? t('user_role_admin') : role === 'executive' ? t('user_role_executive') : role === 'volunteer' ? t('user_role_volunteer') : role ? t('user_role_member') : null;
   const roleColor: any = role === 'admin' ? 'secondary' : role === 'executive' ? 'info' : role === 'member' ? 'success' : 'warning';
   const [adminAnchor, setAdminAnchor] = React.useState<null | HTMLElement>(null);

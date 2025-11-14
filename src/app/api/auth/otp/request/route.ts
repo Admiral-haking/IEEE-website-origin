@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AppError } from '@/server/errors';
 import { incrWithTtl, setEx } from '@/lib/redis';
 import { sendSms, normalizeIrPhone } from '@/server/sms/service';
+import { getFeatures } from '@/server/settings/service';
 
 const WINDOW_SEC = Number(process.env.OTP_WINDOW_SEC || 10 * 60);
 const LIMIT_PER_PHONE = Number(process.env.OTP_LIMIT_PER_PHONE || 5);
@@ -11,6 +12,10 @@ function genCode() { return String(Math.floor(100000 + Math.random() * 900000));
 
 export async function POST(req: NextRequest) {
   try {
+    const features = await getFeatures();
+    if (!features.auth.phoneOtpEnabled) {
+      return NextResponse.json({ error: 'OTP login disabled' }, { status: 503 });
+    }
     const { phone } = await req.json();
     if (!phone || String(phone).length < 6) throw new AppError('Invalid phone', 400);
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
@@ -32,4 +37,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message || 'Bad Request' }, { status });
   }
 }
-

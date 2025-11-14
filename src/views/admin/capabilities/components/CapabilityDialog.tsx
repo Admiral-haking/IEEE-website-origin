@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { CapabilityFormSchema } from '@/validators/forms/capability';
 import { useTranslation } from 'react-i18next';
 import MediaPickerDialog from '@/components/MediaPickerDialog';
+import Image from 'next/image';
 import Editor from '@/components/Editor';
 
 const Schema = CapabilityFormSchema;
@@ -58,9 +59,8 @@ export default function CapabilityDialog({ open, onClose, initial, onSubmit }: {
           <Box>
             <Button variant="outlined" size="small" onClick={() => setPickerOpen(true)}>{t('select_image')}</Button>
             {imageSrc && (
-              <Box sx={{ mt: 1 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageSrc} alt="cover" style={{ maxWidth: '100%', borderRadius: 8 }} />
+              <Box sx={{ mt: 1, position: 'relative', width: '100%', maxWidth: '100%', height: 220, borderRadius: 1, overflow: 'hidden' }}>
+                <Image src={imageSrc} alt="cover" fill sizes="100vw" style={{ objectFit: 'cover' }} />
               </Box>
             )}
           </Box>

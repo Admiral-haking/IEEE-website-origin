@@ -22,6 +22,7 @@ import AdminAccessAlert from '@/components/AdminAccessAlert';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { hasPermission } from '@/constants/permissions';
 
 const allowAllStatus = () => true;
@@ -139,6 +140,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <ListItemText
               primary={t('permissions') as any || 'Permissions'}
               secondary={(t('permissions_sub') as any) || 'Fine-grained permissions'}
+              primaryTypographyProps={{ suppressHydrationWarning: true }}
+              secondaryTypographyProps={{ suppressHydrationWarning: true }}
+            />
+          </ListItemButton>
+        )}
+        {(isAdmin || canAccessPermissions) && (
+          <ListItemButton component={NextLink} href={`/${locale}/admin/settings`} sx={{ borderRadius: 2, mx: 1, my: 0.5 }}>
+            <ListItemIcon><SettingsOutlinedIcon /></ListItemIcon>
+            <ListItemText
+              primary={t('site_settings') as any || 'Site settings'}
+              secondary={(t('settings_sub') as any) || 'Feature toggles'}
               primaryTypographyProps={{ suppressHydrationWarning: true }}
               secondaryTypographyProps={{ suppressHydrationWarning: true }}
             />

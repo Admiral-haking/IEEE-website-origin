@@ -84,6 +84,10 @@ For a comprehensive Persian overview of systems and technologies, see:
     - OpenAI: `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_PROJECT`, `OPENAI_ORGANIZATION`
     - DeepSeek: `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL`
   - اعلان ایمیلی: `NOTIFICATIONS_EMAIL_ENABLED` (غیرفعال‌سازی با `0`/`false`)
+  - فلگ‌های قابلیت/نمایش:
+    - Web Vitals: `NEXT_PUBLIC_ENABLE_VITALS` (کلاینت) و `OPS_VITALS_ENABLED` (سرور)
+    - Assist Widget: `NEXT_PUBLIC_ENABLE_ASSIST` (کلاینت)
+    - چت: `NEXT_PUBLIC_DISABLE_CHAT` (مخفی‌سازی در UI) و `CHAT_DISABLED` (غیرفعال‌سازی API)
   - CORS داخلی API: `CLIENT_ORIGIN` (پیش‌فرض: http://localhost:3000)
 
 - APIهای شاخص (خلاصه‌ی گروه‌ها):

@@ -5,6 +5,8 @@ import ContactMessage from '@/models/ContactMessage';
 import { sendContactEmail } from '@/server/mail/mailer';
 import { AppError } from '@/server/errors';
 import { incrWithTtl } from '@/lib/redis';
+import { moderateText } from '@/server/ai/moderation';
+import { getFeatures } from '@/server/settings/service';
 
 const Schema = z.object({
   name: z.string().min(2).max(120),
@@ -55,14 +57,23 @@ export async function POST(req: NextRequest) {
     if (!ticket.ok) return NextResponse.json({ error: 'Too Many Requests' }, { status: 429, headers: { 'Retry-After': String(ticket.retryAfter || 60) } });
     const json = await req.json();
     const input = Schema.parse(json);
-    // Optional captcha verification (Cloudflare Turnstile preferred)
-    if (process.env.TURNSTILE_SECRET_KEY) {
-      const ok = await verifyTurnstile(input.turnstileToken || '', clientIp);
-      if (!ok) return NextResponse.json({ error: 'Captcha verification failed' }, { status: 400 });
-    } else if (process.env.HCAPTCHA_SECRET) {
-      const ok = await verifyHcaptcha(input.hcaptchaToken || '', clientIp);
-      if (!ok) return NextResponse.json({ error: 'Captcha verification failed' }, { status: 400 });
-    }
+    // Optional captcha verification (admin-controlled)
+    try {
+      const f = await getFeatures();
+      if (f.contact.captchaProvider === 'turnstile' && process.env.TURNSTILE_SECRET_KEY) {
+        const ok = await verifyTurnstile(input.turnstileToken || '', clientIp);
+        if (!ok) return NextResponse.json({ error: 'Captcha verification failed' }, { status: 400 });
+      } else if (f.contact.captchaProvider === 'hcaptcha' && process.env.HCAPTCHA_SECRET) {
+        const ok = await verifyHcaptcha(input.hcaptchaToken || '', clientIp);
+        if (!ok) return NextResponse.json({ error: 'Captcha verification failed' }, { status: 400 });
+      }
+    } catch {}
+    // AI moderation (optional)
+    try {
+      const mod = await moderateText(`${input.subject}\n${input.message}`, input.locale);
+      if (!mod.allowed) return NextResponse.json({ error: 'Content not allowed' }, { status: 400 });
+    } catch {}
+
     const ip = clientIp;
     const ua = req.headers.get('user-agent') || '';
     const created = await ContactMessage.create({ ...input, metadata: { ip, ua } });

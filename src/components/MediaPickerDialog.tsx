@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 import useAxios from 'axios-hooks';
 import { Dialog, DialogTitle, DialogContent, ImageList, ImageListItem, ImageListItemBar, IconButton, Tooltip, Button, Stack, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -47,8 +48,9 @@ export default function MediaPickerDialog({ open, onClose, onSelect, imagesOnly 
             const src = `/api/media/${f._id}`;
             return (
               <ImageListItem key={f._id} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt={f.filename} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
+                <div style={{ position: 'relative', width: '100%', height: 160 }}>
+                  <Image src={src} alt={f.filename} fill sizes="(max-width: 900px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
+                </div>
                 <ImageListItemBar title={f.filename} actionIcon={
                   <Tooltip title={t('select') as string}>
                     <IconButton onClick={() => { onSelect({ id: String(f._id), src, filename: f.filename, contentType: f.contentType }); onClose(); }} size="small" sx={{ color: 'white' }}>
