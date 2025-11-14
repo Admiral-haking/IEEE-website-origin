@@ -45,12 +45,14 @@ export async function registerUser(input: RegisterInput) {
   const passwordHash = await hashPassword(input.password);
   // If explicitly allowed via env, first user can be admin; otherwise everyone signs up as volunteer.
   const allowFirstAdmin = (process.env.ALLOW_FIRST_ADMIN_SIGNUP || '').toLowerCase() === 'true';
+  const smtpAvailable = Boolean(process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS);
   let role: 'admin' | 'volunteer' = 'volunteer';
   if (allowFirstAdmin) {
     const count = await User.countDocuments();
     role = count === 0 ? 'admin' : 'volunteer';
   }
-  const needsVerification = role !== 'admin';
+  // If SMTP is not configured, skip email verification entirely so that signup works without mail.
+  const needsVerification = role !== 'admin' && smtpAvailable;
   let verificationToken: string | null = null;
   let verificationHash: string | undefined;
   let verificationExpires: Date | undefined;

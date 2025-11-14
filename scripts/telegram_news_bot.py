@@ -37,9 +37,9 @@ def load_dotenv(path: str = ".env") -> None:
 load_dotenv()
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-BOT_API_SECRET = os.environ.get("BOT_API_SECRET", "")
+TELEGRAM_WEBHOOK_SECRET = os.environ.get("TELEGRAM_WEBHOOK_SECRET") or os.environ.get("BOT_API_SECRET", "")
 NEWS_API_URL = os.environ.get("NEWS_API_URL", "")
-ALLOWED_CHAT_ID = os.environ.get("ALLOWED_CHAT_ID")
+ALLOWED_CHAT_ID = os.environ.get("TELEGRAM_ALLOWED_CHAT_ID") or os.environ.get("ALLOWED_CHAT_ID")
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")
 
 LOG_FILE = os.environ.get("NEWS_BOT_LOG_FILE", "/var/log/ieee-news-bot.log")
@@ -60,8 +60,8 @@ def _require_config() -> None:
     missing = []
     if not TELEGRAM_BOT_TOKEN:
         missing.append("TELEGRAM_BOT_TOKEN")
-    if not BOT_API_SECRET:
-        missing.append("BOT_API_SECRET")
+    if not TELEGRAM_WEBHOOK_SECRET:
+        missing.append("TELEGRAM_WEBHOOK_SECRET")
     if not NEWS_API_URL:
         missing.append("NEWS_API_URL")
     if missing:
@@ -167,7 +167,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             res = await client.post(
                 NEWS_API_URL,
                 json=payload,
-                headers={"x-telegram-bot-api-secret-token": BOT_API_SECRET},
+                headers={"x-telegram-bot-api-secret-token": TELEGRAM_WEBHOOK_SECRET},
             )
         data = res.json()
     except Exception as e:  # noqa: BLE001

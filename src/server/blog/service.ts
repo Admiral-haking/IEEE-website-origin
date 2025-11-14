@@ -23,7 +23,19 @@ export async function listPosts(opts: { q?: string; page?: number; pageSize?: nu
     BlogPost.find(query).sort({ createdAt: -1 }).skip((page - 1) * pageSize).limit(pageSize).lean(),
     BlogPost.countDocuments(query)
   ]);
-  const safe = items.map((d) => ({ id: String(d._id), title: d.title, slug: d.slug, published: d.published, createdAt: d.createdAt }));
+  const safe = items.map((d: any) => ({
+    id: String(d._id),
+    title: d.title,
+    slug: d.slug,
+    excerpt: d.excerpt || '',
+    contentHtml: d.contentHtml || '',
+    coverFileId: d.coverFileId,
+    tags: Array.isArray(d.tags) ? d.tags : [],
+    published: d.published,
+    author: d.author || '',
+    locale: d.locale,
+    createdAt: d.createdAt,
+  }));
   return { items: safe, total, page, pageSize };
 }
 

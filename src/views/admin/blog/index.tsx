@@ -12,7 +12,16 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useTranslation } from 'react-i18next';
 import { usePathname } from 'next/navigation';
 
-type Row = { id: string; title: string; slug: string; published: boolean };
+type Row = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  contentHtml?: string;
+  coverFileId?: string;
+  tags?: string[];
+  published: boolean;
+};
 
 export default function BlogAdminView() {
   const { t } = useTranslation();

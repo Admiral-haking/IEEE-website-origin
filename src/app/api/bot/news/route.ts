@@ -68,7 +68,9 @@ async function saveTelegramPhoto(body: any): Promise<string | null> {
 }
 
 export async function POST(req: NextRequest) {
-  const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
+  const expectedPrimary = process.env.TELEGRAM_WEBHOOK_SECRET;
+  const expectedLegacy = process.env.BOT_API_SECRET;
+  const expected = expectedPrimary || expectedLegacy;
   const secretFromHeader = req.headers.get('x-telegram-bot-api-secret-token');
 
   if (!expected || secretFromHeader !== expected) {

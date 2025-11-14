@@ -18,11 +18,12 @@ import Image from 'next/image';
 
 const Schema = PostFormSchema;
 type Values = z.infer<typeof PostFormSchema>;
+type InitialValues = Partial<Omit<Values, 'tags'>> & { tags?: string | string[]; coverFileId?: string };
 
 export default function PostDialog({ open, onClose, initial, onSubmit }: {
   open: boolean;
   onClose: () => void;
-  initial?: Partial<Values>;
+  initial?: InitialValues;
   onSubmit: (values: Values) => Promise<void> | void;
 }) {
   const { t } = useTranslation();

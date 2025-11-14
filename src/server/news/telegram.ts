@@ -1,7 +1,7 @@
 import '@/lib/mongoose';
 import BlogPost from '@/models/BlogPost';
 import { sanitizeRichText } from '@/server/html/sanitize';
-import { callAI } from '@/server/ai/providers';
+import { callAI, type ProviderName } from '@/server/ai/providers';
 import { getFeatures } from '@/server/settings/service';
 import { saveBase64File } from '@/server/media/gridfs';
 import { getBaseUrl } from '@/lib/metadata';
@@ -9,8 +9,12 @@ import { getBaseUrl } from '@/lib/metadata';
 type TelegramMessage = {
   message_id: number;
   text?: string;
+  caption?: string;
+  photo?: Array<{ file_id: string; width?: number; height?: number }>;
   from?: { id: number; username?: string; first_name?: string; last_name?: string };
   chat?: { id: number; type: string; title?: string; username?: string };
+  forward_from_chat?: { id: number; title?: string; username?: string };
+  forward_from?: { id: number; username?: string; first_name?: string; last_name?: string };
 };
 
 type TelegramUpdate = {
@@ -124,8 +128,16 @@ export async function generateNewsFromText(
   if (!features.ai || !(features.ai as any).enabled) {
     throw new Error('AI features disabled');
   }
-  const defaults = ((features.ai as any)?.defaultModels || { deepseek: 'deepseek-chat' }) as { deepseek?: string };
-  const model = defaults.deepseek || 'deepseek-chat';
+  const ai = features.ai as any;
+  const provider: ProviderName = ai?.provider === 'deepseek' ? 'deepseek' : 'openai';
+  const defaults = (ai?.defaultModels || { openai: 'gpt-4o-mini', deepseek: 'deepseek-chat' }) as {
+    openai?: string;
+    deepseek?: string;
+  };
+  const model =
+    provider === 'deepseek'
+      ? (defaults.deepseek || 'deepseek-chat')
+      : (defaults.openai || 'gpt-4o-mini');
   const system = `
 You are a senior editorial assistant for a bilingual (English/Persian) university technology news website.
 
@@ -157,7 +169,7 @@ Rules:
 `.trim();
 
   const raw = await callAI({
-    provider: 'deepseek',
+    provider,
     model,
     messages: [
       { role: 'system', content: system },
@@ -242,13 +254,29 @@ async function sendTelegramMessage(chatId: number, text: string) {
 
 export async function handleTelegramUpdate(update: TelegramUpdate) {
   const msg = update.message;
-  if (!msg || !msg.text) return { skipped: true };
+  if (!msg) return { skipped: true };
 
-  const text = msg.text.trim();
+  const baseText = (msg.text && msg.text.trim())
+    || (msg.caption && msg.caption.trim())
+    || '';
+  if (!baseText) return { skipped: true };
+
+  const meta: string[] = [];
+  const fwdChat = msg.forward_from_chat;
+  const fwdUser = msg.forward_from;
+  if (fwdChat) {
+    const title = fwdChat.title || fwdChat.username || '';
+    if (title) meta.push(`Forwarded from channel: ${title}`);
+  } else if (fwdUser) {
+    const uname = fwdUser.username || '';
+    if (uname) meta.push(`Forwarded from user: @${uname}`);
+  }
+
+  const text = meta.length > 0 ? `${meta.join('\n\n')}\n\n${baseText}` : baseText;
   // Ignore commands like /start
   if (!text || text.startsWith('/')) return { skipped: true };
 
-  const allowedChat = process.env.TELEGRAM_ALLOWED_CHAT_ID;
+  const allowedChat = process.env.TELEGRAM_ALLOWED_CHAT_ID || process.env.ALLOWED_CHAT_ID;
   if (allowedChat && msg.chat && String(msg.chat.id) !== String(allowedChat)) {
     return { skipped: true };
   }
